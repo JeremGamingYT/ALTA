@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ALTA Logo](icons/icon128.png)
+![ALTA Logo](images/icon-32.png)
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
 [![Firefox Add-ons](https://img.shields.io/amo/v/unofficial-anilist-updater?style=for-the-badge)](https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/)
@@ -25,11 +25,6 @@
 ### Chrome
 1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
 2. Click "Add to Chrome"
-3. Follow the authentication process with your AniList account
-
-### Firefox
-1. Visit [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/)
-2. Click "Add to Firefox"
 3. Follow the authentication process with your AniList account
 
 ## 💻 Development Setup
