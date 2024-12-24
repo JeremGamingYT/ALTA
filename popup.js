@@ -6,8 +6,10 @@ const NAMESPACES = {
   type: "type"
 };
 
-var client_id = clientData.clientId; // tu as "clientData" quelque part ?
+// Si tu l'as déjà défini ailleurs, enlève-le
+var client_id = clientData.clientId;
 var webAuthUrl = "https://anilist.co/api/v2/oauth/authorize?client_id=" + client_id + "&response_type=token";
+
 var token;
 var userId = "";
 var displayedType = "ANIME";
@@ -30,6 +32,7 @@ const thumbWidth = 100;
 var logIn = doc.getElementById("logIn");
 var logOut = doc.getElementById("logout");
 
+// ================== EVENTS ===================
 logIn.addEventListener("click", function() {
   chrome.identity.launchWebAuthFlow({ url: webAuthUrl, interactive: true }, function(redirectUrl) {
     let access_token = redirectUrl.match(/\#(?:access_token)\=([\S\s]*?)\&/)[1];
@@ -49,6 +52,10 @@ logIn.addEventListener("click", function() {
       fetch(SERVICE_URL, options)
         .then(handleResponse)
         .then(function(response) {
+          if (!response.data || !response.data.Viewer) {
+            console.error("Impossible de récupérer l'userId : ", response);
+            return;
+          }
           userId = response.data.Viewer.id;
           storage.set({ [NAMESPACES.userId]: userId });
           logIn.style.display = "none";
@@ -70,6 +77,7 @@ logOut.addEventListener("click", function() {
   logIn.style.display = "";
 });
 
+// ================== GET OPTIONS ===================
 function getOptions(query, variables) {
   let options = {
     method: METHOD,
@@ -79,7 +87,113 @@ function getOptions(query, variables) {
   return options;
 }
 
-// ================== Caching logic ======================
+// ================== REFRESH LIST ===================
+async function refreshList() {
+  // Pour forcer un refresh sans cache => on met maxAgeSeconds à 0 ou un truc bas
+  fullList = await getWatching(/* noCache = true */);
+  displayedList = fullList;
+  computeStatsFromList(fullList);
+  updateImages();
+}
+
+// ================== STATS ===================
+function computeStatsFromList(animeList) {
+  if (!animeList) return;
+  let totalProgress = 0;
+  animeList.forEach(item => {
+    totalProgress += item.progress || 0;
+  });
+  const avgEpisodeMinutes = 24;
+  let totalTime = totalProgress * avgEpisodeMinutes;
+  chrome.storage.local.set({
+    totalEpisodesWatched: totalProgress,
+    totalMinutesWatched: totalTime
+  });
+}
+
+// ================== GET WATCHING ===================
+async function getWatching(noCache) {
+  let type, format;
+  if (displayedType === "MANGA") {
+    type = "MANGA";
+    format = "chapters";
+  } else {
+    type = "ANIME";
+    format = "episodes";
+  }
+
+  /*
+    Si tu veux inclure aussi les animes terminés dans la liste,
+    tu peux changer "status: CURRENT" en "status_in: [CURRENT, COMPLETED]"
+
+    query($userId:Int){
+      MediaListCollection(userId:$userId, type:ANIME, status_in:[CURRENT,COMPLETED], sort:UPDATED_TIME){
+        ...
+      }
+    }
+  */
+
+  let query = `
+    query($userId:Int){
+      MediaListCollection(userId:$userId, type:${type}, status:CURRENT, sort:UPDATED_TIME){
+        lists {
+          entries {
+            id
+            mediaId
+            progress
+            media {
+              ${format}
+              status
+              title {
+                romaji
+                english
+              }
+              coverImage {
+                medium
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  let variables = { userId: parseInt(userId) };
+
+  // Si noCache == true, on fetch direct
+  if (noCache) {
+    let res = await fetch(SERVICE_URL, getOptions(query, variables))
+      .then(r => r.json())
+      .catch(e => {
+        console.error("Erreur fetch direct getWatching:", e);
+        return null;
+      });
+    if (!res || !res.data || !res.data.MediaListCollection) {
+      console.log("Aucune liste trouvée ou data manquante =>", res);
+      return [];
+    }
+    if (!res.data.MediaListCollection.lists || res.data.MediaListCollection.lists.length === 0) {
+      return [];
+    }
+    // On peut renvoyer la première liste
+    return res.data.MediaListCollection.lists[0].entries || [];
+  }
+
+  // Sinon, on tente un fetchWithCache
+  let cacheKey = `watching_${userId}_${type}`;
+  let json = await fetchWithCache(cacheKey, query, variables, 600).catch(e => {
+    console.error("Erreur fetchWithCache getWatching:", e);
+    return null;
+  });
+  if (!json || !json.data || !json.data.MediaListCollection) {
+    console.log("Pas de data =>", json);
+    return [];
+  }
+  let lists = json.data.MediaListCollection.lists;
+  if (!lists || !lists[0]) return [];
+  return lists[0].entries || [];
+}
+
+// ================== SIMPLE FETCH WITH CACHE ===================
 function fetchWithCache(cacheKey, query, variables, maxAgeSeconds=3600) {
   return new Promise((resolve, reject) => {
     let now = Date.now();
@@ -92,7 +206,7 @@ function fetchWithCache(cacheKey, query, variables, maxAgeSeconds=3600) {
           return resolve(data);
         }
       }
-      // sinon, on fetch
+      // sinon on fetch
       fetch(SERVICE_URL, getOptions(query, variables))
         .then(r => r.json())
         .then(json => {
@@ -109,64 +223,7 @@ function fetchWithCache(cacheKey, query, variables, maxAgeSeconds=3600) {
   });
 }
 
-// ======================================================
-
-async function refreshList() {
-  fullList = await getWatching();
-  displayedList = fullList;
-  updateImages();
-}
-
-async function getWatching() {
-  let type, format;
-  if (displayedType === "MANGA") {
-    type = "MANGA";
-    format = "chapters";
-  } else {
-    type = "ANIME";
-    format = "episodes";
-  }
-
-  // On peut faire un cacheKey basé sur le userId et la type
-  let cacheKey = `watching_${userId}_${type}`;
-  let query = `
-    query($userId:Int){
-      MediaListCollection(userId:$userId, type:${type}, status:CURRENT, sort:UPDATED_TIME){
-        lists {
-          entries {
-            id
-            mediaId
-            progress
-            media {
-              status
-              ${format}
-              title {
-                romaji
-                english
-              }
-              coverImage {
-                medium
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-  let variables = { userId: parseInt(userId) };
-
-  // Ex : 10 min de cache => 600
-  let json = await fetchWithCache(cacheKey, query, variables, 600).catch(e => {
-    console.error("Erreur fetchWithCache getWatching:", e);
-    return null;
-  });
-  if (!json) return [];
-
-  let lists = json.data.MediaListCollection.lists;
-  if (!lists || !lists[0]) return [];
-  return lists[0].entries; // simplifié
-}
-
+// ================== HANDLE/UPDATE ===================
 function handleResponse(response) {
   return response.json().then(function(json) {
     return response.ok ? json : Promise.reject(json);
@@ -177,6 +234,7 @@ function handleError(error) {
   console.error("Error:", error);
 }
 
+// ================== UPDATE IMAGES ===================
 function updateImages() {
   display.innerHTML = "<tbody></tbody>";
   let displayBody = display.tBodies[0];
@@ -212,28 +270,14 @@ function updateImages() {
       </a>
     `;
     let decrement = `
-      <button
-        id="dec-${mediaList.id}"
-        style="float:left"
-        height="1"
-        width="1"
-      >-</button>
+      <button id="dec-${mediaList.id}" style="float:left" height="1" width="1">-</button>
     `;
     let totalEpisodes = (displayedType === "MANGA")
       ? (mediaList.media.chapters || "")
       : (mediaList.media.episodes || "");
-    let text = `
-      <span id="prog-${mediaList.id}">
-        ${mediaList.progress}/${totalEpisodes || "?"}
-      </span>
-    `;
+    let text = `<span id="prog-${mediaList.id}">${mediaList.progress}/${totalEpisodes || "?"}</span>`;
     let increment = `
-      <button
-        id="inc-${mediaList.id}"
-        style="float:right"
-        height="1"
-        width="1"
-      >+</button>
+      <button id="inc-${mediaList.id}" style="float:right" height="1" width="1">+</button>
     `;
     let span = `<div class="centerText">${decrement} ${text} ${increment}</div>`;
     let cellHtmlString = `<td class="cell">${imgHtmlString} ${span}</td>`;
@@ -258,11 +302,16 @@ function updateImages() {
   }
 }
 
+// ================== MEDIA CLICK ===================
+// Timer pour chaque anime (débounce mini)
+const clickTimers = {};
+
 function mediaClick(mediaList, i) {
   return function(e) {
-    let progress = mediaList.progress + i;
-    // On met à jour AniList
-    let query = `
+    clearTimeout(clickTimers[mediaList.id]);
+
+    const newProgress = mediaList.progress + i;
+    const query = `
       mutation($id:Int,$progress:Int){
         SaveMediaListEntry(id:$id, progress:$progress){
           id
@@ -270,31 +319,50 @@ function mediaClick(mediaList, i) {
         }
       }
     `;
-    let variables = { id: mediaList.id, progress: progress };
-    fetch(SERVICE_URL, getOptions(query, variables))
-      .then(res => res.json())
-      .then(data => {
-        mediaList.progress = data.data.SaveMediaListEntry.progress;
+    const variables = {
+      id: mediaList.id,
+      progress: newProgress
+    };
 
-        // On update l’affichage
-        let total = (displayedType === "MANGA")
-          ? (mediaList.media.chapters || "")
-          : (mediaList.media.episodes || "");
-        doc.getElementById(`prog-${mediaList.id}`).innerText =
-          `${mediaList.progress}/${total || "?"}`;
+    // On attend 300ms (exemple) avant d'envoyer (petite protection anti-spam)
+    clickTimers[mediaList.id] = setTimeout(() => {
+      fetch(SERVICE_URL, getOptions(query, variables))
+        .then(res => res.json())
+        .then(json => {
+          if (json.errors) {
+            console.error("AniList GraphQL Errors =>", json.errors);
+            return;
+          }
+          if (!json.data || !json.data.SaveMediaListEntry) {
+            console.error("SaveMediaListEntry est null =>", json);
+            return;
+          }
 
-        // On met à jour les stats en local (si +1)
-        if (i > 0) {
-          updateStats(i); 
-        }
-      })
-      .catch(handleError);
+          mediaList.progress = json.data.SaveMediaListEntry.progress;
+
+          let total = (displayedType === "MANGA")
+            ? (mediaList.media.chapters || "")
+            : (mediaList.media.episodes || "");
+
+          doc.getElementById(`prog-${mediaList.id}`).innerText = 
+            `${mediaList.progress}/${total || "?"}`;
+
+          // Si c’était un +, on met à jour les stats locales
+          if (i > 0) {
+            updateStats(i);
+          }
+
+          // Pour être sûr d'être sync => on peut faire un refreshList() 
+          // Mais attention, ça re-calcule tout de suite.
+          // refreshList();
+        })
+        .catch(handleError);
+    }, 300);
   };
 }
 
-// ================== Stats (exemple) ===================
+// ================== STATS (SAME) ===================
 function updateStats(increment) {
-  // On suppose 24 minutes par épisode
   const avgEpisodeMinutes = 24;
   chrome.storage.local.get(["totalEpisodesWatched", "totalMinutesWatched"], function(res) {
     let epCount = res.totalEpisodesWatched || 0;
@@ -315,34 +383,19 @@ function showStats() {
     let hours = (minCount / 60).toFixed(1);
 
     let html = `
-      <h2>My Statistics</h2>
-      <p>Episodes watched: ${epCount}</p>
-      <p>Approximate total time: ${hours} hours</p>
+      <h2>My Stats</h2>
+      <p>Episodes Watched : ${epCount}</p>
+      <p>Total Hours Watched : ${hours} hours</p>
       <button id="closePanel">Close</button>
     `;
     showPanel(html);
   });
 }
 
-// ============= Overlay Panel ============
-var overlayPanel = doc.getElementById("overlayPanel");
-function showPanel(innerHtml) {
-  overlayPanel.innerHTML = innerHtml;
-  overlayPanel.style.display = "block";
-  let closeBtn = overlayPanel.querySelector("#closePanel");
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      overlayPanel.style.display = "none";
-    });
-  }
-}
-
-// Juste un exemple, si tu stockais un “historique” de notifications en local :
+// ================== NOTIFS (OPTIONNEL) ===================
 function showNotifications() {
-  // On récupère le tableau "notificationsHistory"
   chrome.storage.local.get(["notificationsHistory"], function(result) {
     let history = result.notificationsHistory || [];
-    // S’il est vide, on affiche juste un message
     if (history.length === 0) {
       let html = `
         <h2>Recent notifications</h2>
@@ -352,11 +405,8 @@ function showNotifications() {
       showPanel(html);
       return;
     }
-
-    // Sinon, on crée une liste
     let notifHtml = history
-      .slice() // copie du tableau
-      .reverse() // pour afficher la plus récente en premier
+      .slice().reverse()
       .map(entry => {
         let dateString = new Date(entry.date).toLocaleString();
         return `
@@ -379,18 +429,14 @@ function showNotifications() {
     `;
     showPanel(html);
 
-    // Gérer le bouton "Tout effacer"
     let clearBtn = doc.getElementById("clearNotifications");
     clearBtn.addEventListener("click", function() {
-      // On efface l’historique dans le storage
       chrome.storage.local.set({ notificationsHistory: [] }, function() {
-        // on referme le panel ou on réaffiche quelque chose
         showPanel(`
           <h2>Recent notifications</h2>
           <p>No notifications found.</p>
           <button id="closePanel">Close</button>
         `);
-        // on remet un listener pour le fermer
         let closeBtn2 = doc.getElementById("closePanel");
         closeBtn2.addEventListener("click", () => {
           overlayPanel.style.display = "none";
@@ -400,13 +446,29 @@ function showNotifications() {
   });
 }
 
-// =======================================
+// ================== OVERLAY PANEL ===================
+var overlayPanel = doc.getElementById("overlayPanel");
+function showPanel(innerHtml) {
+  overlayPanel.innerHTML = innerHtml;
+  overlayPanel.style.display = "block";
+  let closeBtn = overlayPanel.querySelector("#closePanel");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      overlayPanel.style.display = "none";
+    });
+  }
+}
 
+// ================== TOGGLE / SEARCH / ICONS ===================
 async function toggleList() {
   displayedType = (displayedType === "ANIME") ? "MANGA" : "ANIME";
   doc.getElementById("listType").innerHTML = displayedType;
   storage.set({ [NAMESPACES.type]: displayedType });
-  refreshList();
+  // On force un refresh sans cache
+  fullList = await getWatching(true);
+  displayedList = fullList;
+  computeStatsFromList(fullList);
+  updateImages();
 }
 
 function searchList(e) {
@@ -427,6 +489,7 @@ function searchList(e) {
   updateImages();
 }
 
+// Boutons
 var toggleBtn = doc.getElementById("toggle");
 toggleBtn.addEventListener("click", toggleList);
 
@@ -434,28 +497,33 @@ var searchInput = doc.getElementById("search");
 var searchButton = doc.getElementById("go");
 searchButton.addEventListener("click", searchList);
 
-// Icônes
 var notificationIcon = doc.getElementById("notificationIcon");
-notificationIcon.addEventListener("click", showNotifications);
+if (notificationIcon) {
+  notificationIcon.addEventListener("click", showNotifications);
+}
 var statsIcon = doc.getElementById("statsIcon");
-statsIcon.addEventListener("click", showStats);
+if (statsIcon) {
+  statsIcon.addEventListener("click", showStats);
+}
 
-// Au chargement
-storage.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], function(result) {
-  if (result.type) {
-    displayedType = result.type;
-  } else {
-    displayedType = "ANIME";
-  }
+// ================== ON LOAD (INIT) ===================
+storage.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async function(result) {
+  displayedType = result.type || "ANIME";
   doc.getElementById("listType").innerHTML = displayedType;
+
   token = result.token;
   headers["Authorization"] = "Bearer " + token;
   userId = result.userId;
-  
+
   if (token && userId) {
     logIn.style.display = "none";
   } else {
     logOut.style.display = "none";
   }
-  refreshList();
+
+  // Force un refresh direct sans cache la première fois
+  fullList = await getWatching(true);
+  displayedList = fullList;
+  computeStatsFromList(fullList);
+  updateImages();
 });
