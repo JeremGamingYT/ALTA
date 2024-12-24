@@ -13,13 +13,13 @@
 }
 
 body {
-  vertical-align: middle;
   background-color: var(--primary-bg);
   width: 420px;
   color: var(--text-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   margin: 0;
   padding: 16px;
+  box-sizing: border-box;
 }
 
 /* Barre du haut */
@@ -59,6 +59,7 @@ form {
   display: flex;
   gap: 8px;
   flex-grow: 1;
+  min-width: 0;
 }
 
 input {
@@ -82,14 +83,34 @@ input::placeholder {
   opacity: 0.6;
 }
 
-/* Grille des animes */
+/* Barre d'icônes (notifications, stats, etc.) */
+.iconContainer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.iconContainer i {
+  font-size: 1.4em;
+  color: var(--accent-color);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.iconContainer i:hover {
+  color: var(--button-hover);
+}
+
+/* Table pour lister les animes */
 table {
   border-collapse: separate;
   border-spacing: 8px;
   width: 100%;
+  margin-bottom: 16px; /* léger espace en bas */
 }
 
-/* Cellules individuelles */
+/* Cellules */
 .cell {
   display: table-cell;
   height: 150px;
@@ -97,10 +118,9 @@ table {
   border: 2px solid var(--border-color);
   border-radius: 8px;
   background-color: var(--secondary-bg);
-  padding: 4px;
   position: relative;
-  transition: all 0.2s ease;
   overflow: hidden;
+  transition: all 0.2s ease;
 }
 
 .cell:hover {
@@ -109,7 +129,6 @@ table {
   border-color: var(--accent-color);
 }
 
-/* Images */
 img {
   display: block;
   width: 100%;
@@ -124,7 +143,7 @@ img {
   opacity: 1;
 }
 
-/* Bandeau au bas de l'image */
+/* Bandeau au bas de l'image (pour + / -) */
 .centerText {
   width: 100%;
   text-align: center;
@@ -138,9 +157,8 @@ img {
   border-bottom-right-radius: 6px;
 }
 
-/* Boutons + / - */
 .centerText button {
-  padding: 2px 7px;
+  padding: 4px 10px;
   font-size: 14px;
   background-color: var(--secondary-bg);
   color: var(--text-color);
@@ -153,7 +171,7 @@ img {
   background-color: var(--hover-color);
 }
 
-/* Titre "ANIME / MANGA" */
+/* Indicateur: ANIME / MANGA */
 .textDisplay {
   display: inline-block;
   font-weight: bold;
@@ -180,25 +198,7 @@ img {
   background: var(--accent-color);
 }
 
-.iconContainer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.iconContainer i {
-  font-size: 1.4em;
-  color: var(--accent-color);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.iconContainer i:hover {
-  color: var(--button-hover);
-}
-
-/* Petites popups ou modals */
+/* Overlay panel pour stats, notifs, etc. */
 #overlayPanel {
   position: fixed;
   top: 10%;
@@ -211,4 +211,28 @@ img {
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
   display: none; /* caché par défaut */
   z-index: 9999;
+  max-height: 70%;
+  overflow-y: auto;
+}
+
+/* Animation d'apparition */
+#overlayPanel.animate-in {
+  animation: fadeInScale 0.3s forwards;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
 }

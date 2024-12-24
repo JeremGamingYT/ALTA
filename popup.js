@@ -317,16 +317,12 @@ function handleError(error) {
 
 // ================== UPDATE IMAGES ===================
 function updateImages() {
-  display.innerHTML = "<tbody></tbody>";
-  let displayBody = display.tBodies[0];
+  // On vide d’abord le container
+  display.innerHTML = "";
 
-  if (!Array.isArray(displayedList)) {
-    displayedList = [];
-  }
-
-  if (displayedList.length === 0) {
+  if (!Array.isArray(displayedList) || displayedList.length === 0) {
     let noItems = doc.createElement("H5");
-    let textString = token
+    let textString = token 
       ? "Doesn't look like there's anything here..."
       : "Doesn't look like you're logged in yet";
     noItems.appendChild(doc.createTextNode(textString));
@@ -334,11 +330,20 @@ function updateImages() {
     return;
   }
 
-  let newRowHtmlString = "";
-
+  // On construit un "cell" par anime
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
+    
+    // On crée un conteneur .cell
+    let cellDiv = document.createElement("div");
+    cellDiv.className = "cell";
+
+    // Construire l’HTML interne
     let aniListUrl = `https://anilist.co/anime/${mediaList.mediaId}`;
+    let totalEpisodes = (displayedType === "MANGA")
+      ? (mediaList.media.chapters || "")
+      : (mediaList.media.episodes || "");
+
     let imgHtmlString = `
       <a href="${aniListUrl}" target="_blank" style="text-decoration:none;">
         <img
@@ -351,31 +356,34 @@ function updateImages() {
       </a>
     `;
     let decrement = `
-      <button id="dec-${mediaList.id}" style="float:left" height="1" width="1">-</button>
+      <button
+        id="dec-${mediaList.id}"
+        style="float:left;"
+        height="1"
+        width="1"
+      >-</button>
     `;
-    let totalEpisodes = (displayedType === "MANGA")
-      ? (mediaList.media.chapters || "")
-      : (mediaList.media.episodes || "");
-    let text = `<span id="prog-${mediaList.id}">${mediaList.progress}/${totalEpisodes || "?"}</span>`;
+    let text = `
+      <span id="prog-${mediaList.id}">${mediaList.progress}/${totalEpisodes || "?"}</span>
+    `;
     let increment = `
-      <button id="inc-${mediaList.id}" style="float:right" height="1" width="1">+</button>
+      <button
+        id="inc-${mediaList.id}"
+        style="float:right;"
+        height="1"
+        width="1"
+      >+</button>
     `;
     let span = `<div class="centerText">${decrement} ${text} ${increment}</div>`;
-    let cellHtmlString = `<td class="cell">${imgHtmlString} ${span}</td>`;
-    newRowHtmlString += cellHtmlString;
 
-    if ((displayedList.length - 1 - i) % COLUMNS === COLUMNS - 1) {
-      newRowHtmlString = "<tr>" + newRowHtmlString + "</tr>";
-      displayBody.innerHTML += newRowHtmlString;
-      newRowHtmlString = "";
-    }
-  }
-  if (newRowHtmlString !== "") {
-    newRowHtmlString = "<tr>" + newRowHtmlString + "</tr>";
-    displayBody.innerHTML += newRowHtmlString;
+    // On assemble
+    cellDiv.innerHTML = imgHtmlString + span;
+
+    // On ajoute la div .cell dans #display
+    display.appendChild(cellDiv);
   }
 
-  // On ajoute les listeners +/-
+  // Maintenant qu’on a ajouté toutes les cells, on place les listeners +/-
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
     doc.getElementById(`dec-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, -1));
@@ -529,10 +537,16 @@ var overlayPanel = doc.getElementById("overlayPanel");
 function showPanel(innerHtml) {
   overlayPanel.innerHTML = innerHtml;
   overlayPanel.style.display = "block";
+  // on ajoute la classe pour animer
+  overlayPanel.classList.remove("animate-in");
+  void overlayPanel.offsetWidth; // trigger reflow
+  overlayPanel.classList.add("animate-in");
+
   let closeBtn = overlayPanel.querySelector("#closePanel");
   if (closeBtn) {
     closeBtn.addEventListener("click", () => {
       overlayPanel.style.display = "none";
+      overlayPanel.classList.remove("animate-in");
     });
   }
 }
