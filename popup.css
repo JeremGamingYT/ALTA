@@ -179,3 +179,36 @@ img {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-color);
 }
+
+.iconContainer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.iconContainer i {
+  font-size: 1.4em;
+  color: var(--accent-color);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.iconContainer i:hover {
+  color: var(--button-hover);
+}
+
+/* Petites popups ou modals */
+#overlayPanel {
+  position: fixed;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  padding: 16px;
+  background-color: var(--secondary-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  display: none; /* caché par défaut */
+  z-index: 9999;
+}
