@@ -1,8 +1,13 @@
 {
-    "name": "UNOFFICIAL Anilist Updater",
-    "description": "Update Anilists in your browser",
-    "version": "0.1",
-    "permissions": ["storage", "identity"],
+    "name": "ALTA",
+    "description": "Automatically Update your Anilists in your browser",
+    "version": "0.2",
+    "permissions": [
+        "storage",
+        "identity",
+        "https://graphql.anilist.co/"
+    ],
+    "content_security_policy": "script-src 'self'; object-src 'self'; connect-src https://graphql.anilist.co/;",
     "browser_action": {
         "default_icon": {
             "16": "images/icon-16.png",
@@ -20,4 +25,4 @@
       "64": "images/icon-64.png"
     },
     "manifest_version": 2
-  }
+}

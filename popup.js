@@ -152,7 +152,12 @@ function handleError(error) {
 function updateImages() {
   display.innerHTML = '<tbody></tbody>';
   let displayBody = display.tBodies[0];
-  if (displayedList === undefined || displayedList.length === 0) {
+  // S'assurer que displayedList est toujours un tableau
+  if (!Array.isArray(displayedList)) {
+    displayedList = [];
+  }
+
+  if (displayedList.length === 0) {
     let noItems = doc.createElement('H5');
     let textString = token ? `Doesn't look like theres anything here, remember to add entries to your lists at anilist.co first` : `Doesn't look like you're logged in yet`;
     let text = doc.createTextNode(textString);
