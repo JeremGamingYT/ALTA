@@ -9,15 +9,20 @@
 
 *Automatically track your anime progress on AniList while you watch!*
 
+**Current Version: 1.1**
+
 </div>
 
 ## ✨ Features
 
 - 🔄 **Automatic Progress Tracking**: Updates your AniList progress in real-time while watching
 - 🎯 **Smart Detection**: Automatically identifies the anime you're watching
+- 📊 **Enhanced Statistics**: View your global anime statistics including total episodes watched and mean scores
+- 🔔 **Notifications System**: Track your recent updates and activities
 - 🔒 **Secure Authentication**: Safe and secure connection with your AniList account
 - 🌐 **Cross-Platform**: Available for both Chrome and Firefox
-- 🎨 **Clean Interface**: Simple and intuitive user interface
+- 🎨 **Clean Interface**: Simple and intuitive user interface with improved UI/UX
+- 📱 **Responsive Design**: Better button spacing and visual improvements
 
 ## 🚀 Installation
 
@@ -47,10 +52,22 @@
 2. Log in with your AniList account
 3. Start watching on supported platforms
 4. ALTA will automatically update your progress!
+5. Access global stats and notifications through the toolbar icons
+
+## 🆕 What's New in 1.1
+
+- Added global statistics view with total episodes, mean scores, and more
+- Implemented notifications system to track recent updates
+- Improved UI with better button spacing and visual enhancements
+- Enhanced error handling and API response management
+- Better caching system for improved performance
+- Support for both current and paused anime in lists
 
 ## 🙏 Acknowledgments
 
-This project is an enhanced version of the [Unofficial AniList Updater](https://github.com/bm-khan/Unofficial-Anilist-Updater) by bm-khan.
+- AniList for providing the API
+- All contributors and users who helped improve ALTA
+- The anime community for their continued support
 
 ## 📝 License
 

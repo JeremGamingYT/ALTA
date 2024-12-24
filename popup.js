@@ -221,7 +221,7 @@ async function getWatching(noCache) {
 
   let query = `
     query($userId:Int){
-      MediaListCollection(userId:$userId, type:ANIME, status_in:[CURRENT,COMPLETED], sort:UPDATED_TIME){
+      MediaListCollection(userId:$userId, type:ANIME, status_in:[CURRENT, PAUSED], sort:UPDATED_TIME){
         lists {
           entries {
             id

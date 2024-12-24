@@ -1,7 +1,7 @@
 {
   "name": "ALTA - Crunchyroll Sync + NextAiring Notifs",
   "description": "Automatically update your AniList from Crunchyroll and notify for next episodes",
-  "version": "0.7",
+  "version": "1.1",
   "author": "JeremGaming",
   "manifest_version": 2,
   "permissions": [
