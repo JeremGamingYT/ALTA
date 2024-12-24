@@ -1,28 +1,40 @@
 {
-    "name": "ALTA",
-    "description": "Automatically Update your Anilists in your browser",
-    "version": "0.2",
-    "permissions": [
-        "storage",
-        "identity",
-        "https://graphql.anilist.co/"
-    ],
-    "content_security_policy": "script-src 'self'; object-src 'self'; connect-src https://graphql.anilist.co/;",
-    "browser_action": {
-        "default_icon": {
-            "16": "images/icon-16.png",
-            "32": "images/icon-32.png",
-            "48": "images/icon-48.png",
-            "64": "images/icon-64.png"
-          },
-        "default_title": "Anilist Menu",
-        "default_popup": "popup.html"
-    },
-    "icons": {
+  "name": "ALTA - Crunchyroll Sync",
+  "description": "Automatically update your AniList when watching on Crunchyroll",
+  "version": "0.3",
+  "permissions": [
+    "storage",
+    "identity",
+    "https://graphql.anilist.co/",
+    "tabs"
+  ],
+  "content_security_policy": "script-src 'self'; object-src 'self'; connect-src https://graphql.anilist.co/;",
+  "browser_action": {
+    "default_icon": {
       "16": "images/icon-16.png",
       "32": "images/icon-32.png",
       "48": "images/icon-48.png",
       "64": "images/icon-64.png"
     },
-    "manifest_version": 2
+    "default_title": "Anilist Menu",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "images/icon-16.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "64": "images/icon-64.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://www.crunchyroll.com/*/watch/*"],
+      "js": ["crunchyroll-content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "manifest_version": 2
 }
