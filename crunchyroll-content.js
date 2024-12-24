@@ -7,15 +7,14 @@
   
       if (titleEl && episodeEl) {
         var animeTitle = titleEl.textContent.trim();
-        // On s’attend à un format du style : "E11 - La réincarnation de la déesse"
-        // On va donc extraire "11" avec un petit RegEx
-        var epText = episodeEl.textContent.trim(); 
+        var epText = episodeEl.textContent.trim();
+        // On s’attend à un format "E11 - Titre de l’épisode"
         var match = epText.match(/E(\d+)/i);
         var episodeNumber = match ? parseInt(match[1]) : null;
   
-        console.log("Titre détecté :", animeTitle);
-        console.log("Épisode détecté :", episodeNumber);
+        console.log("CR-content: Titre =", animeTitle, " / Épisode =", episodeNumber);
   
+        // Envoi d'un message au background
         chrome.runtime.sendMessage({
           action: "CRUNCHYROLL_EPISODE_FOUND",
           data: {
@@ -23,19 +22,13 @@
             episodeNumber: episodeNumber
           }
         }, function(response) {
-          if (response && response.status === "ok") {
-            console.log("Message background : succès.");
-          } else {
-            console.log("Message background : erreur ou aucune réponse :", response);
-          }
+          console.log("Réponse background:", response);
         });
   
+        // On arrête d'observer (ou pas, si tu veux detecter un changement de page auto)
         obs.disconnect();
       }
     });
   
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
 })();  

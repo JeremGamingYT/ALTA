@@ -1,18 +1,15 @@
 {
-  "name": "ALTA - Crunchyroll Sync",
-  "description": "Automatically update your AniList when watching on Crunchyroll",
-  "version": "0.3",
-  "creators": [
-    {
-      "name": "JeremGaming",
-      "url": "https://github.com/JeremGamingYT"
-    }
-  ],
+  "name": "ALTA - Crunchyroll Sync + NextAiring Notifs",
+  "description": "Automatically update your AniList from Crunchyroll and notify for next episodes",
+  "version": "0.5",
+  "manifest_version": 2,
   "permissions": [
     "storage",
     "identity",
     "https://graphql.anilist.co/",
-    "tabs"
+    "tabs",
+    "notifications",
+    "alarms"
   ],
   "content_security_policy": "script-src 'self'; object-src 'self'; connect-src https://graphql.anilist.co/;",
   "browser_action": {
@@ -25,11 +22,9 @@
     "default_title": "Anilist Menu",
     "default_popup": "popup.html"
   },
-  "icons": {
-    "16": "images/icon-16.png",
-    "32": "images/icon-32.png",
-    "48": "images/icon-48.png",
-    "64": "images/icon-64.png"
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
   },
   "content_scripts": [
     {
@@ -38,9 +33,8 @@
       "run_at": "document_idle"
     }
   ],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
-  "manifest_version": 2
+  "icons": {
+    "48": "images/icon-48.png",
+    "64": "images/icon-64.png"
+  }
 }
