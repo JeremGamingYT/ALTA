@@ -152,80 +152,93 @@ function handleError(error) {
 function updateImages() {
   display.innerHTML = '<tbody></tbody>';
   let displayBody = display.tBodies[0];
-  // S'assurer que displayedList est toujours un tableau
+
   if (!Array.isArray(displayedList)) {
     displayedList = [];
   }
 
   if (displayedList.length === 0) {
     let noItems = doc.createElement('H5');
-    let textString = token ? `Doesn't look like theres anything here, remember to add entries to your lists at anilist.co first` : `Doesn't look like you're logged in yet`;
+    let textString = token 
+      ? `Doesn't look like theres anything here...` 
+      : `Doesn't look like you're logged in yet`;
     let text = doc.createTextNode(textString);
     noItems.appendChild(text);
     display.appendChild(noItems);
+    return;
   }
+
   let newRowHtmlString = "";
 
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
+    
+    // <-- Ici on construit le lien vers AniList
+    let aniListUrl = `https://anilist.co/anime/${mediaList.mediaId}`;
 
-    let imgHtmlString = `<img `;
-    imgHtmlString += `id="mediaList-${mediaList.id}" `;
-    imgHtmlString += `height="${thumbHeight}px" `;
-    imgHtmlString += `width="${thumbWidth}px" `;
-    imgHtmlString += `src="${mediaList.media.coverImage.medium}" `;
-    imgHtmlString += `title="${mediaList.media.title.romaji}" `;
-    imgHtmlString += `>`;
+    let imgHtmlString = `
+      <a href="${aniListUrl}" target="_blank" style="text-decoration: none;">
+        <img
+          id="mediaList-${mediaList.id}"
+          height="${thumbHeight}px"
+          width="${thumbWidth}px"
+          src="${mediaList.media.coverImage.medium}"
+          title="${mediaList.media.title.romaji}"
+        />
+      </a>
+    `;
 
-    let decrement = `<button `;
-    decrement += `id="dec-${mediaList.id}" `;
-    decrement += `style="float: left" `;
-    decrement += `height="${1}" `;
-    decrement += `width="${1}" `;
-    decrement += `>`;
-    decrement += `-`;
-    decrement += `</button>`;
+    let decrement = `
+      <button
+        id="dec-${mediaList.id}"
+        style="float: left"
+        height="1"
+        width="1"
+      >
+        -
+      </button>
+    `;
 
-    let totalEpisodes;
-    if (displayedType === "MANGA") {
-      totalEpisodes = mediaList.media.chapters || '';
-    } else {
-      totalEpisodes = mediaList.media.episodes || '';
-    }
+    let totalEpisodes = displayedType === "MANGA"
+      ? (mediaList.media.chapters || '')
+      : (mediaList.media.episodes || '');
 
-    let text = `<span `;
-    text += `id="prog-${mediaList.id}"`;
-    text += `>`;
-    text += `${mediaList.progress}/${totalEpisodes || '?'}`;
-    text += `</span>`;
-    let increment = `<button `;
-    increment += `id="inc-${mediaList.id}" `;
-    increment += `style="float: right" `;
-    increment += `height="${1}" `;
-    increment += `width="${1}" `;
-    increment += `>`;
-    increment += `+`;
-    increment += `</button>`;
+    let text = `
+      <span id="prog-${mediaList.id}">
+        ${mediaList.progress}/${totalEpisodes || "?"}
+      </span>
+    `;
+
+    let increment = `
+      <button
+        id="inc-${mediaList.id}"
+        style="float: right"
+        height="1"
+        width="1"
+      >
+        +
+      </button>
+    `;
 
     let span = `<div class="centerText">${decrement} ${text} ${increment}</div>`;
+    let cellHtmlString = `<td class="cell">${imgHtmlString} ${span}</td>`;
+    newRowHtmlString += cellHtmlString;
 
-
-    let cellHtmlString = `<td class="cell"> ${imgHtmlString} ${span}</td>`
-    newRowHtmlString += cellHtmlString
-    if ((displayedList.length - 1 - i)%COLUMNS === COLUMNS-1) {
-      newRowHtmlString = '<tr>' + newRowHtmlString + '</tr>'
+    if ((displayedList.length - 1 - i) % COLUMNS === COLUMNS - 1) {
+      newRowHtmlString = '<tr>' + newRowHtmlString + '</tr>';
       displayBody.innerHTML += newRowHtmlString;
       newRowHtmlString = "";
     }
-
   }
+
   if (newRowHtmlString !== "") {
-    newRowHtmlString = '<tr>' + newRowHtmlString + '</tr>'
+    newRowHtmlString = '<tr>' + newRowHtmlString + '</tr>';
     displayBody.innerHTML += newRowHtmlString;
   }
-  for (i = displayedList.length - 1; i >= 0; i--) {
+
+  // On réinstalle les écouteurs "click" sur +/-
+  for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
-    // doc.getElementById(`mediaList-${mediaList.id}`).addEventListener("click", mediaClick(mediaList));
     doc.getElementById(`dec-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, -1));
     doc.getElementById(`inc-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, 1));
   }

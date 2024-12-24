@@ -2,6 +2,12 @@
   "name": "ALTA - Crunchyroll Sync",
   "description": "Automatically update your AniList when watching on Crunchyroll",
   "version": "0.3",
+  "creators": [
+    {
+      "name": "JeremGaming",
+      "url": "https://github.com/JeremGamingYT"
+    }
+  ],
   "permissions": [
     "storage",
     "identity",
