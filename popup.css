@@ -140,12 +140,12 @@ img {
 
 /* Boutons + / - */
 .centerText button {
-  padding: 2px 8px;
+  padding: 2px 7px;
   font-size: 14px;
   background-color: var(--secondary-bg);
   color: var(--text-color);
   border-radius: 4px;
-  margin: 0 4px;
+  margin: 0 6px;
   transition: background-color 0.2s ease;
 }
 
