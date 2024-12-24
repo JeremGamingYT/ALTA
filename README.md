@@ -20,16 +20,18 @@
 - 📊 **Enhanced Statistics**: View your global anime statistics including total episodes watched and mean scores
 - 🔔 **Notifications System**: Track your recent updates and activities
 - 🔒 **Secure Authentication**: Safe and secure connection with your AniList account
-- 🌐 **Cross-Platform**: Available for both Chrome and Firefox
+- 🌐 **Cross-Platform**: Coming to Chrome Web Store in 2025
 - 🎨 **Clean Interface**: Simple and intuitive user interface with improved UI/UX
 - 📱 **Responsive Design**: Better button spacing and visual improvements
 
 ## 🚀 Installation
 
-### Chrome
-1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
-2. Click "Add to Chrome"
-3. Follow the authentication process with your AniList account
+### Chrome (Manual Installation)
+1. Download the latest release from GitHub
+2. Enable Developer mode in Chrome extensions
+3. Click "Load unpacked" and select the downloaded folder
+
+> 📝 Note: ALTA will be available on the Chrome Web Store in 2025! Until then, please use the manual installation method.
 
 ## 💻 Development Setup
 
