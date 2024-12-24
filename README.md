@@ -4,9 +4,8 @@
 
 ![ALTA Logo](images/icon-32.png)
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
-[![Firefox Add-ons](https://img.shields.io/amo/v/unofficial-anilist-updater?style=for-the-badge)](https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/)
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/your-username/ALTA)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://github.com/JeremGamingYT/ALTA)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeremGamingYT/ALTA)
 
 *Automatically track your anime progress on AniList while you watch!*
 
