@@ -173,7 +173,6 @@ function updateImages() {
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
     
-    // <-- Ici on construit le lien vers AniList
     let aniListUrl = `https://anilist.co/anime/${mediaList.mediaId}`;
 
     let imgHtmlString = `
@@ -236,7 +235,6 @@ function updateImages() {
     displayBody.innerHTML += newRowHtmlString;
   }
 
-  // On réinstalle les écouteurs "click" sur +/-
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
     doc.getElementById(`dec-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, -1));

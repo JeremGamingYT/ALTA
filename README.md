@@ -1,52 +1,69 @@
-# Unofficial Anilist Updater Chrome Extension
-Also available for Firefox!
+# ALTA - AniList Track Assistant 🎬
 
-The [master] branch will continue as the Chrome version source code.
+<div align="center">
 
-For Firefox version source code, please see the [firefox] branch.
-## Download now!
-https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgnnolhmplbje/
+![ALTA Logo](icons/icon128.png)
 
-https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
+[![Firefox Add-ons](https://img.shields.io/amo/v/unofficial-anilist-updater?style=for-the-badge)](https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/your-username/ALTA)
 
-## How to set up
-If you want to customize the application, you'll have to deal with setting this up locally, which means you'll have to set up your own client application on Anilist, and load an unpacked Chrome extension.
-To set up the client app, you'll need to get a redirect URL from the Chrome extension.
-Then to log in to Anilist, you'll need to get your app's clientId.
+*Automatically track your anime progress on AniList while you watch!*
 
-### Installing the Chrome extension:
-  - Download the repository and unzip the download somewhere
-  - Head to chrome://extensions/
-  - Click 'Load unpacked'
-  - Select the folder that you unzipped
-  - Go to the Anilist Updater in your extensions and click 'Details'
-  - Copy the ID string, this will be part of your client ID when setting up the API client on Anilist
-  
-### Setting up an API client on Anilist  
-  - Head to https://anilist.co/settings/developer
-  - Click 'Create New Client'
-  - You can make the name whatever you like, although you might be legally obligated to say "UNOFFICIAL" in the title I'm not really sure
-  - Change the redirect url to: https://[CHROME-EXT-ID].chromiumapp.org/, but replace [CHROME-EXT-ID] with the ID you copied from the details page of the Chrome extension
-  - Save the client, there should now be a Client ID and Client Secret, don't let anyone see these
-  - Copy the Client ID, and go back to where you installed the Chrome Extension
-  - Open up the "data.js" file and replace the "YOUR CLIENT ID HERE" with "[CLIENTID]", where [CLIENTID] is the client ID you copied earlier
+</div>
 
-With that, the application should be ready to use.
+## ✨ Features
 
-## Use
-  - Click the Anilist Updater icon in your toolbar to open the pop-up
-  - 'Log in' will open a log in prompt for Anilist so the Chrome extension can access your lists. You can revoke this application's access to your account by going to https://anilist.co/settings/apps and revoking the application
-  - 'Log out' will remove your token from storage and log you out
-  - 'Refresh display' will simply refresh whatever content the app is displaying, handy if you think something went wrong
-  - 'Toggle' will switch from displaying your anime list or your manga list
-  - 'Search' will display whatever content on your list matches your search. As of now, only querying for the English and Romaji titles of media is supported
-  - Click the '-' or '+' buttons to increment progress for a title
-  
-## Notes
-  - Volumes for manga list items (including light novels) aren't supported, only chapters are shown
-  - If the total number of chapters/episodes isn't finalized on Anilist (for currently releasing media) a '?' is shown instead
-  - Sometimes things like episode numbers and images will load/update slowly
-  - The Chrome extension only shows items that you have listed as watching/reading on Anilist, if you complete something, it will dissappear from the menu when you reload it
-  - Adding items/removing items to your list isn't supported, only updating your watching/reading lists
-  - Changing the progress number directly is not yet supported
-  
+- 🔄 **Automatic Progress Tracking**: Updates your AniList progress in real-time while watching
+- 🎯 **Smart Detection**: Automatically identifies the anime you're watching
+- 🔒 **Secure Authentication**: Safe and secure connection with your AniList account
+- 🌐 **Cross-Platform**: Available for both Chrome and Firefox
+- 🎨 **Clean Interface**: Simple and intuitive user interface
+
+## 🚀 Installation
+
+### Chrome
+1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/ggjlaakenonjlionbnebgbje/)
+2. Click "Add to Chrome"
+3. Follow the authentication process with your AniList account
+
+### Firefox
+1. Visit [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/unofficial-anilist-updater/)
+2. Click "Add to Firefox"
+3. Follow the authentication process with your AniList account
+
+## 💻 Development Setup
+
+1. Clone the repository
+2. Copy `config.example.js` to a new file named `background.js`
+3. Enable Developer mode in your browser's extension settings
+4. Set up your AniList API client:
+   - Go to [AniList Developer Settings](https://anilist.co/settings/developer)
+   - Create a new client
+   - Set redirect URL to: `https://[YOUR-EXTENSION-ID].chromiumapp.org/`
+   - Copy your Client ID to `data.js`
+5. Update `background.js` with your AniList credentials
+6. Load the unpacked extension
+
+⚠️ **Security Note**: Never commit your personal AniList credentials to the repository. The files containing sensitive information (`background.js` and `data.js`) are already in `.gitignore`.
+
+## 🛠️ Usage
+
+1. Click the ALTA icon in your browser toolbar
+2. Log in with your AniList account
+3. Start watching on supported platforms
+4. ALTA will automatically update your progress!
+
+## 🙏 Acknowledgments
+
+This project is an enhanced version of the [Unofficial AniList Updater](https://github.com/bm-khan/Unofficial-Anilist-Updater) by bm-khan.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+Made with ❤️ for the anime community
+</div>
