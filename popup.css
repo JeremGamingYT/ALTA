@@ -22,8 +22,9 @@ body {
   padding: 16px;
 }
 
+/* Barre du haut */
 .topBar {
-  background-color: var(--secondary-bg);
+  background: linear-gradient(135deg, var(--secondary-bg) 0%, #303248 100%);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
@@ -31,9 +32,10 @@ body {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Boutons */
 button {
   background-color: var(--button-color);
   color: var(--primary-bg);
@@ -43,14 +45,16 @@ button {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
   background-color: var(--button-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Formulaire de recherche */
 form {
   display: flex;
   gap: 8px;
@@ -78,9 +82,17 @@ input::placeholder {
   opacity: 0.6;
 }
 
+/* Grille des animes */
+table {
+  border-collapse: separate;
+  border-spacing: 8px;
+  width: 100%;
+}
+
+/* Cellules individuelles */
 .cell {
   display: table-cell;
-  height: 140px;
+  height: 150px;
   width: 100px;
   border: 2px solid var(--border-color);
   border-radius: 8px;
@@ -93,32 +105,31 @@ input::placeholder {
 
 .cell:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   border-color: var(--accent-color);
 }
 
+/* Images */
 img {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 6px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.9;
 }
 
 .cell:hover img {
   transform: scale(1.05);
+  opacity: 1;
 }
 
-table {
-  border-collapse: separate;
-  border-spacing: 8px;
-}
-
+/* Bandeau au bas de l'image */
 .centerText {
   width: 100%;
   text-align: center;
   padding: 8px 4px;
-  background: rgba(26, 27, 38, 0.9);
+  background: rgba(0, 0, 0, 0.6);
   position: absolute;
   bottom: 0;
   left: 0;
@@ -127,17 +138,22 @@ table {
   border-bottom-right-radius: 6px;
 }
 
+/* Boutons + / - */
 .centerText button {
   padding: 2px 8px;
   font-size: 14px;
   background-color: var(--secondary-bg);
   color: var(--text-color);
+  border-radius: 4px;
+  margin: 0 4px;
+  transition: background-color 0.2s ease;
 }
 
 .centerText button:hover {
   background-color: var(--hover-color);
 }
 
+/* Titre "ANIME / MANGA" */
 .textDisplay {
   display: inline-block;
   font-weight: bold;
