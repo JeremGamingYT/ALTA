@@ -148,7 +148,7 @@ async function fetchAllAnime(userId) {
             hasNextPage
             currentPage
           }
-          mediaList(userId:$userId, type:ANIME, status_in:[CURRENT,COMPLETED]){
+          mediaList(userId:$userId, type:ANIME, status_in:[CURRENT, PAUSED]){
             id
             progress
             media {
@@ -249,7 +249,7 @@ async function getWatching(noCache) {
     let res = await fetch(SERVICE_URL, getOptions(query, variables))
       .then(r => r.json())
       .catch(e => {
-        console.error("Erreur fetch direct getWatching:", e);
+        console.log("Reponse de AniList (getWatching):", JSON.stringify(res, null, 2));
         return null;
       });
     if (!res || !res.data || !res.data.MediaListCollection) {
@@ -330,15 +330,11 @@ function updateImages() {
     return;
   }
 
-  // On construit un "cell" par anime
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
-    
-    // On crée un conteneur .cell
     let cellDiv = document.createElement("div");
     cellDiv.className = "cell";
 
-    // Construire l’HTML interne
     let aniListUrl = `https://anilist.co/anime/${mediaList.mediaId}`;
     let totalEpisodes = (displayedType === "MANGA")
       ? (mediaList.media.chapters || "")
@@ -359,8 +355,6 @@ function updateImages() {
       <button
         id="dec-${mediaList.id}"
         style="float:left;"
-        height="1"
-        width="1"
       >-</button>
     `;
     let text = `
@@ -370,25 +364,109 @@ function updateImages() {
       <button
         id="inc-${mediaList.id}"
         style="float:right;"
-        height="1"
-        width="1"
       >+</button>
     `;
     let span = `<div class="centerText">${decrement} ${text} ${increment}</div>`;
 
-    // On assemble
     cellDiv.innerHTML = imgHtmlString + span;
 
-    // On ajoute la div .cell dans #display
+    // ===> ICI : CLIC DROIT pour ouvrir le menu contextuel
+    cellDiv.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+      // Montre un menu permettant de choisir le statut
+      showStatusMenu(e.clientX, e.clientY, mediaList);
+    });
+
     display.appendChild(cellDiv);
   }
 
-  // Maintenant qu’on a ajouté toutes les cells, on place les listeners +/-
+  function showStatusMenu(x, y, mediaList) {
+    // On supprime un éventuel menu déjà affiché
+    const oldMenu = doc.getElementById("statusMenu");
+    if (oldMenu) oldMenu.remove();
+  
+    const menu = document.createElement("div");
+    menu.id = "statusMenu";
+    menu.style.position = "fixed";
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+    menu.style.backgroundColor = "#24283b";
+    menu.style.border = "1px solid #414868";
+    menu.style.borderRadius = "6px";
+    menu.style.padding = "8px";
+    menu.style.zIndex = 999999;
+    menu.style.minWidth = "100px";
+  
+    // Quelques choix de statuts
+    const statuses = ["CURRENT", "COMPLETED", "PAUSED", "DROPPED", "PLANNING"];
+  
+    statuses.forEach(st => {
+      let btn = document.createElement("button");
+      btn.textContent = st;
+      btn.style.display = "block";
+      btn.style.margin = "4px 0";
+      btn.addEventListener("click", function() {
+        // Quand on clique sur un statut, on appelle la mutation
+        updateAnimeStatus(mediaList.id, st);
+        // On retire le menu
+        menu.remove();
+      });
+      menu.appendChild(btn);
+    });
+  
+    // Pour fermer le menu en cliquant hors de celui-ci
+    setTimeout(() => {
+      document.addEventListener("click", function handleClickOutside(e) {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener("click", handleClickOutside);
+        }
+      });
+    }, 0);
+  
+    document.body.appendChild(menu);
+  }  
+
+  // On ajoute les listeners +/- existants
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
-    doc.getElementById(`dec-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, -1));
-    doc.getElementById(`inc-${mediaList.id}`).addEventListener("click", mediaClick(mediaList, 1));
+    doc.getElementById(`dec-${mediaList.id}`)
+       .addEventListener("click", mediaClick(mediaList, -1));
+    doc.getElementById(`inc-${mediaList.id}`)
+       .addEventListener("click", mediaClick(mediaList, 1));
   }
+}
+
+function updateAnimeStatus(listEntryId, newStatus) {
+  const query = `
+    mutation($id:Int, $status: MediaListStatus) {
+      SaveMediaListEntry(id:$id, status:$status) {
+        id
+        status
+      }
+    }
+  `;
+  const variables = {
+    id: listEntryId,
+    status: newStatus
+  };
+  fetch(SERVICE_URL, getOptions(query, variables))
+    .then(res => res.json())
+    .then(json => {
+      if (json.errors) {
+        console.error("AniList GraphQL Errors =>", json.errors);
+        return;
+      }
+      if (!json.data || !json.data.SaveMediaListEntry) {
+        console.error("SaveMediaListEntry est null =>", json);
+        return;
+      }
+      console.log("Statut mis à jour =>", json.data.SaveMediaListEntry.status);
+
+      // Optionnel : rafraîchir la liste ou faire un refreshList()
+      refreshList();
+    })
+    .catch(err => console.error("Erreur updateAnimeStatus =>", err));
 }
 
 // ================== MEDIA CLICK ===================

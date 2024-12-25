@@ -236,3 +236,17 @@ img {
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 8px;
 }
+
+#statusMenu button {
+  background: #414868;
+  color: #c0caf5;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+#statusMenu button:hover {
+  background: #3b4261;
+}
