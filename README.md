@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![ALTA Logo](images/icon-32.png)
+![ALTA Logo](images/icon-64.png)
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://github.com/JeremGamingYT/ALTA)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeremGamingYT/ALTA)
