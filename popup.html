@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="popup.css">
@@ -6,28 +6,48 @@
   <script type="text/javascript" src="data.js"></script>
 </head>
 <body>
+  <!-- Barre principale avec recherche et actions -->
   <div class="topBar">
-    <button id="logIn"> Log in </button>
-    <button id="logout"> Log Out </button>
-    <form>
-      <input id="search" placeholder="Search your list">
-      <button id="go" type="submit"> Search </button>
-    </form>
-    <div style="display:inline-block; float:right">
-      <div id="listType" class="textDisplay"></div>
-      <button id="toggle"> Toggle </button>
+    <button id="logIn" class="primaryBtn">
+      <i class="fas fa-sign-in-alt"></i> Log In
+    </button>
+    <button id="logout" class="secondaryBtn">
+      <i class="fas fa-sign-out-alt"></i> Log Out
+    </button>
+    
+    <div class="searchWrapper">
+      <i class="fas fa-search searchIcon"></i>
+      <input id="search" placeholder="Search your list..." type="search">
+      <button id="go" type="submit" class="searchBtn">
+        <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="toggleContainer">
+      <span id="listType" class="textDisplay">ANIME</span>
+      <button id="toggle" class="toggleBtn">
+        <i class="fas fa-exchange-alt"></i>
+      </button>
     </div>
   </div>
 
-  <div class="iconContainer">
-    <i id="notificationIcon" class="fa-solid fa-bell"></i>
-    <i id="statsIcon" class="fa-solid fa-chart-bar"></i>
+  <!-- Barre d'outils -->
+  <div class="toolbar">
+    <button id="notificationIcon" class="toolbarBtn">
+      <i class="fa-solid fa-bell"></i>
+      <span class="tooltiptext">Notifications</span>
+    </button>
+    <button id="statsIcon" class="toolbarBtn">
+      <i class="fa-solid fa-chart-bar"></i>
+      <span class="tooltiptext">Statistics</span>
+    </button>
   </div>
 
+  <!-- Grille principale -->
   <div id="display" class="animeGrid"></div>
 
-  <!-- Petit overlay pour afficher Stats ou Notifs -->
-  <div id="overlayPanel"></div>
+  <!-- Overlay pour stats/notifications -->
+  <div id="overlayPanel" class="overlayPanel"></div>
 
   <script src="popup.js"></script>
 </body>
