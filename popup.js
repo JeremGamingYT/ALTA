@@ -493,12 +493,21 @@ function updateImages() {
       btn.textContent = st;
       btn.style.display = "block";
       btn.style.margin = "4px 0";
-      btn.addEventListener("click", function() {
-        // Quand on clique sur un statut, on appelle la mutation
-        updateAnimeStatus(mediaList.id, st);
-        // On retire le menu
-        menu.remove();
-      });
+      
+      // Désactiver le bouton si c'est le statut actuel
+      if (st === mediaList.status) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.title = "Current status";
+      } else {
+        btn.addEventListener("click", function() {
+          // Quand on clique sur un statut, on appelle la mutation
+          updateAnimeStatus(mediaList.id, st);
+          // On retire le menu
+          menu.remove();
+        });
+      }
       menu.appendChild(btn);
     });
   
