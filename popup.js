@@ -1,3 +1,21 @@
+// Debugging storage
+console.log('Storage API available:', !!chrome.storage);
+console.log('Local storage available:', !!chrome.storage.local);
+
+// Vérifier le contenu actuel
+chrome.storage.local.get(null, function(items) {
+  console.log('Current storage contents:', items);
+});
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+  for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+    console.log(
+      `Storage key "${key}" in namespace "${namespace}" changed.`,
+      `Old value was "${oldValue}", new value is "${newValue}".`
+    );
+  }
+});
+
 var doc = document;
 var storage = chrome.storage.local;
 const NAMESPACES = {
@@ -34,41 +52,66 @@ var logOut = doc.getElementById("logout");
 
 // ================== EVENTS ===================
 logIn.addEventListener("click", function() {
-  chrome.identity.launchWebAuthFlow({ url: webAuthUrl, interactive: true }, function(redirectUrl) {
+  chrome.identity.launchWebAuthFlow({ url: webAuthUrl, interactive: true }, async function(redirectUrl) {
     let access_token = redirectUrl.match(/\#(?:access_token)\=([\S\s]*?)\&/)[1];
     token = access_token;
-    storage.set({ [NAMESPACES.token]: token });
-    headers["Authorization"] = "Bearer " + token;
+    
+    try {
+      await saveToIndexedDB('userData', {
+        id: 'user',
+        token: token,
+        userId: userId
+      });
+      console.log('Token saved to IndexedDB');
+      
+      console.log('Saving token:', token);
+      
+      chrome.storage.local.set({ [NAMESPACES.token]: token }, function() {
+        if (chrome.runtime.lastError) {
+          console.error('Token storage error:', chrome.runtime.lastError);
+        } else {
+          console.log('Token saved successfully');
+          headers["Authorization"] = "Bearer " + token;
 
-    if (token) {
-      let query = `
-        query {
-          Viewer {
-            id
+          if (token) {
+            let query = `
+              query {
+                Viewer {
+                  id
+                }
+              }
+            `;
+            let options = getOptions(query);
+            fetch(SERVICE_URL, options)
+              .then(handleResponse)
+              .then(function(response) {
+                if (!response.data || !response.data.Viewer) {
+                  console.error("Impossible de récupérer l'userId : ", response);
+                  return;
+                }
+                userId = response.data.Viewer.id;
+                chrome.storage.local.set({ [NAMESPACES.userId]: userId });
+                logIn.style.display = "none";
+                logOut.style.display = "";
+                refreshList();
+              })
+              .catch(handleError);
           }
         }
-      `;
-      let options = getOptions(query);
-      fetch(SERVICE_URL, options)
-        .then(handleResponse)
-        .then(function(response) {
-          if (!response.data || !response.data.Viewer) {
-            console.error("Impossible de récupérer l'userId : ", response);
-            return;
-          }
-          userId = response.data.Viewer.id;
-          storage.set({ [NAMESPACES.userId]: userId });
-          logIn.style.display = "none";
-          logOut.style.display = "";
-          refreshList();
-        })
-        .catch(handleError);
+      });
+    } catch (err) {
+      console.error('Error saving token:', err);
     }
   });
 });
 
 logOut.addEventListener("click", function() {
-  storage.set({ [NAMESPACES.token]: "", [NAMESPACES.userId]: "" });
+  chrome.storage.local.set({ 
+    [NAMESPACES.token]: "", 
+    [NAMESPACES.userId]: "" 
+  }, function() {
+    console.log('Logout storage cleared');
+  });
   headers["Authorization"] = "Bearer ";
   token = "";
   userId = "";
@@ -155,7 +198,7 @@ async function fetchAllAnime(userId) {
               id
               episodes
               title {
-                romaji
+                english
               }
             }
           }
@@ -185,15 +228,29 @@ async function fetchAllAnime(userId) {
 // ================== STATS ===================
 function computeStatsFromList(animeList) {
   if (!animeList) return;
+  
   let totalProgress = 0;
   animeList.forEach(item => {
     totalProgress += item.progress || 0;
   });
+  
   const avgEpisodeMinutes = 24;
   let totalTime = totalProgress * avgEpisodeMinutes;
+  
+  console.log('Saving stats:', {
+    totalEpisodesWatched: totalProgress,
+    totalMinutesWatched: totalTime
+  });
+  
   chrome.storage.local.set({
     totalEpisodesWatched: totalProgress,
     totalMinutesWatched: totalTime
+  }, function() {
+    if (chrome.runtime.lastError) {
+      console.error('Storage error:', chrome.runtime.lastError);
+    } else {
+      console.log('Stats saved successfully');
+    }
   });
 }
 
@@ -227,14 +284,43 @@ async function getWatching(noCache) {
             id
             mediaId
             progress
+            status
+            score
+            startedAt {
+              year
+              month
+              day
+            }
+            completedAt {
+              year
+              month
+              day
+            }
+            notes
             media {
               ${format}
               status
               title {
                 english
+                romaji
+                native
               }
               coverImage {
                 medium
+                large
+                extraLarge
+              }
+              bannerImage
+              format
+              season
+              seasonYear
+              genres
+              averageScore
+              popularity
+              nextAiringEpisode {
+                airingAt
+                timeUntilAiring
+                episode
               }
             }
           }
@@ -258,21 +344,36 @@ async function getWatching(noCache) {
     if (!res.data.MediaListCollection.lists || res.data.MediaListCollection.lists.length === 0) {
       return [];
     }
-    return res.data.MediaListCollection.lists[0].entries || [];
+
+    // Sauvegarder chaque anime dans IndexedDB
+    const entries = res.data.MediaListCollection.lists[0].entries || [];
+    for (let entry of entries) {
+      // On vérifie que le statut est bien CURRENT ou PAUSED
+      if (entry.status === 'CURRENT' || entry.status === 'PAUSED') {
+        try {
+          await saveAnimeToIndexedDB(entry);
+        } catch (err) {
+          console.error('Error saving anime to IndexedDB:', err);
+        }
+      }
+    }
+    return entries;
   }
 
-  let cacheKey = `watching_${userId}_${type}`;
-  let json = await fetchWithCache(cacheKey, query, variables, 600).catch(e => {
-    console.error("Erreur fetchWithCache getWatching:", e);
-    return null;
-  });
-  if (!json || !json.data || !json.data.MediaListCollection) {
-    console.log("Pas de data =>", json);
-    return [];
+  // Si pas noCache, essayer d'abord de récupérer depuis IndexedDB
+  try {
+    const animes = await getFromIndexedDB();
+    
+    // Si les données ont plus d'une heure, forcer un refresh
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    if (animes.length === 0 || animes.some(a => a.lastUpdated < oneHourAgo)) {
+      return getWatching(true);
+    }
+    return animes;
+  } catch (err) {
+    console.error('Error reading from IndexedDB:', err);
+    return getWatching(true);
   }
-  let lists = json.data.MediaListCollection.lists;
-  if (!lists || !lists[0]) return [];
-  return lists[0].entries || [];
 }
 
 // ================== SIMPLE FETCH WITH CACHE ===================
@@ -436,41 +537,124 @@ function updateImages() {
   }
 }
 
-function updateAnimeStatus(listEntryId, newStatus) {
+// Fonction pour filtrer et sauvegarder un anime
+async function saveAnimeToIndexedDB(animeData) {
+  try {
+    // On vérifie d'abord si le statut est CURRENT ou PAUSED
+    if (animeData.status !== 'CURRENT' && animeData.status !== 'PAUSED') {
+      // Si ce n'est pas le cas, on le supprime de IndexedDB s'il existe
+      const store = db.transaction('animeList', 'readwrite').objectStore('animeList');
+      await store.delete(animeData.id);
+      return null;
+    }
+
+    const store = db.transaction('animeList', 'readwrite').objectStore('animeList');
+    
+    const enrichedData = {
+      id: animeData.id,
+      mediaId: animeData.mediaId,
+      progress: animeData.progress,
+      totalEpisodes: animeData.media?.episodes || null,
+      title: {
+        english: animeData.media?.title?.english || null,
+        romaji: animeData.media?.title?.romaji || null,
+        native: animeData.media?.title?.native || null
+      },
+      coverImage: {
+        medium: animeData.media?.coverImage?.medium || null,
+        large: animeData.media?.coverImage?.large || null,
+        extraLarge: animeData.media?.coverImage?.extraLarge || null
+      },
+      bannerImage: animeData.media?.bannerImage || null,
+      status: animeData.status, // CURRENT ou PAUSED uniquement
+      format: animeData.media?.format || null,
+      season: animeData.media?.season || null,
+      seasonYear: animeData.media?.seasonYear || null,
+      genres: animeData.media?.genres || [],
+      averageScore: animeData.media?.averageScore || null,
+      popularity: animeData.media?.popularity || null,
+      nextAiringEpisode: animeData.media?.nextAiringEpisode || null,
+      lastUpdated: Date.now()
+    };
+
+    await store.put(enrichedData);
+    console.log('Anime saved/updated in IndexedDB:', enrichedData);
+    return enrichedData;
+  } catch (err) {
+    console.error('Error saving anime to IndexedDB:', err);
+    throw err;
+  }
+}
+
+// Fonction pour mettre à jour un anime spécifique via l'API
+async function updateAnimeFromAPI(mediaId) {
   const query = `
-    mutation($id:Int, $status: MediaListStatus) {
-      SaveMediaListEntry(id:$id, status:$status) {
+    query($userId:Int, $mediaId:Int){
+      MediaList(userId:$userId, mediaId:$mediaId) {
         id
+        mediaId
+        progress
         status
+        score
+        media {
+          episodes
+          status
+          title {
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            extraLarge
+          }
+          bannerImage
+          format
+          season
+          seasonYear
+          genres
+          averageScore
+          popularity
+          nextAiringEpisode {
+            airingAt
+            timeUntilAiring
+            episode
+          }
+        }
       }
     }
   `;
-  const variables = {
-    id: listEntryId,
-    status: newStatus
+  
+  const variables = { 
+    userId: parseInt(userId),
+    mediaId: parseInt(mediaId)
   };
-  fetch(SERVICE_URL, getOptions(query, variables))
-    .then(res => res.json())
-    .then(json => {
-      if (json.errors) {
-        console.error("AniList GraphQL Errors =>", json.errors);
-        return;
-      }
-      if (!json.data || !json.data.SaveMediaListEntry) {
-        console.error("SaveMediaListEntry est null =>", json);
-        return;
-      }
-      console.log("Statut mis à jour =>", json.data.SaveMediaListEntry.status);
 
-      // Optionnel : rafraîchir la liste ou faire un refreshList()
-      refreshList();
-    })
-    .catch(err => console.error("Erreur updateAnimeStatus =>", err));
+  try {
+    const res = await fetch(SERVICE_URL, getOptions(query, variables));
+    const json = await res.json();
+    
+    if (json.errors) {
+      console.error("API Errors:", json.errors);
+      return null;
+    }
+
+    if (!json.data || !json.data.MediaList) {
+      console.error("No data returned from API");
+      return null;
+    }
+
+    // Sauvegarder dans IndexedDB si c'est CURRENT ou PAUSED
+    const animeData = json.data.MediaList;
+    return await saveAnimeToIndexedDB(animeData);
+  } catch (err) {
+    console.error('Error updating anime from API:', err);
+    return null;
+  }
 }
 
-// ================== MEDIA CLICK ===================
-const clickTimers = {};
-
+// Mise à jour de mediaClick pour utiliser IndexedDB
 function mediaClick(mediaList, i) {
   return function(e) {
     clearTimeout(clickTimers[mediaList.id]);
@@ -481,6 +665,7 @@ function mediaClick(mediaList, i) {
         SaveMediaListEntry(id:$id, progress:$progress){
           id
           progress
+          status
         }
       }
     `;
@@ -489,37 +674,76 @@ function mediaClick(mediaList, i) {
       progress: newProgress
     };
 
-    clickTimers[mediaList.id] = setTimeout(() => {
-      fetch(SERVICE_URL, getOptions(query, variables))
-        .then(res => res.json())
-        .then(json => {
-          if (json.errors) {
-            console.error("AniList GraphQL Errors =>", json.errors);
-            return;
-          }
-          if (!json.data || !json.data.SaveMediaListEntry) {
-            console.error("SaveMediaListEntry est null =>", json);
-            return;
-          }
+    clickTimers[mediaList.id] = setTimeout(async () => {
+      try {
+        const res = await fetch(SERVICE_URL, getOptions(query, variables));
+        const json = await res.json();
+        
+        if (json.errors) {
+          console.error("API Errors:", json.errors);
+          return;
+        }
 
-          mediaList.progress = json.data.SaveMediaListEntry.progress;
+        // Mettre à jour l'anime complet via l'API
+        await updateAnimeFromAPI(mediaList.mediaId);
 
-          let total = (displayedType === "MANGA")
-            ? (mediaList.media.chapters || "")
-            : (mediaList.media.episodes || "");
+        // Rafraîchir l'affichage depuis IndexedDB
+        displayedList = await getFromIndexedDB();
+        updateImages();
 
-          doc.getElementById(`prog-${mediaList.id}`).innerText = 
-            `${mediaList.progress}/${total || "?"}`;
-
-          if (i > 0) {
-            updateStats(i);
-          }
-
-          // refreshList();
-        })
-        .catch(handleError);
+        if (i > 0) {
+          updateStats(i);
+        }
+      } catch (err) {
+        console.error('Error updating progress:', err);
+      }
     }, 300);
   };
+}
+
+// Mise à jour de updateAnimeStatus pour gérer IndexedDB
+async function updateAnimeStatus(listEntryId, newStatus) {
+  const query = `
+    mutation($id:Int, $status:MediaListStatus) {
+      SaveMediaListEntry(id:$id, status:$status) {
+        id
+        mediaId
+        status
+      }
+    }
+  `;
+  
+  const variables = {
+    id: listEntryId,
+    status: newStatus
+  };
+
+  try {
+    const res = await fetch(SERVICE_URL, getOptions(query, variables));
+    const json = await res.json();
+    
+    if (json.errors) {
+      console.error("API Errors:", json.errors);
+      return;
+    }
+
+    const savedEntry = json.data.SaveMediaListEntry;
+    
+    if (newStatus === 'CURRENT' || newStatus === 'PAUSED') {
+      // Mettre à jour l'anime complet dans IndexedDB
+      await updateAnimeFromAPI(savedEntry.mediaId);
+    } else {
+      // Supprimer de IndexedDB si ce n'est plus CURRENT ou PAUSED
+      const store = db.transaction('animeList', 'readwrite').objectStore('animeList');
+      await store.delete(savedEntry.id);
+    }
+
+    // Rafraîchir l'affichage depuis IndexedDB
+    displayedList = await getFromIndexedDB();
+    updateImages();
+  } catch (err) {
+    console.error('Error updating anime status:', err);
+  }
 }
 
 // ================== STATS (SAME) ===================
@@ -632,7 +856,17 @@ function showPanel(innerHtml) {
 async function toggleList() {
   displayedType = (displayedType === "ANIME") ? "MANGA" : "ANIME";
   doc.getElementById("listType").innerHTML = displayedType;
-  storage.set({ [NAMESPACES.type]: displayedType });
+  
+  chrome.storage.local.set({ 
+    [NAMESPACES.type]: displayedType 
+  }, function() {
+    if (chrome.runtime.lastError) {
+      console.error('Error saving displayedType:', chrome.runtime.lastError);
+    } else {
+      console.log('DisplayedType saved:', displayedType);
+    }
+  });
+
   fullList = await getWatching(true);
   displayedList = fullList;
   computeStatsFromList(fullList);
@@ -674,7 +908,9 @@ if (statsIcon) {
 }
 
 // ================== ON LOAD (INIT) ===================
-storage.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async function(result) {
+chrome.storage.local.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async function(result) {
+  console.log('Initial storage load:', result);
+  
   displayedType = result.type || "ANIME";
   doc.getElementById("listType").innerHTML = displayedType;
 
@@ -693,3 +929,247 @@ storage.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async functi
   computeStatsFromList(fullList);
   updateImages();
 });
+
+// Correction 1: Initialisation explicite du storage lors du chargement
+window.addEventListener('load', function() {
+  chrome.storage.local.get(null, function(items) {
+    console.log('Current storage state:', items);
+  });
+});
+
+// Fonction utilitaire pour débugger le storage
+function debugStorage() {
+  chrome.storage.local.get(null, function(items) {
+    console.log('Current storage contents:', items);
+  });
+}
+
+// Appelez cette fonction à des moments stratégiques, par exemple :
+// - Après le login
+// - Après la mise à jour des stats
+// - Au chargement de la page
+
+// Au début du fichier, après les console.log existants
+chrome.storage.local.getBytesInUse(null, function(bytesInUse) {
+  console.log('Storage bytes in use:', bytesInUse);
+});
+
+// Fonction pour réinitialiser le storage en cas de problème
+function resetStorage() {
+  chrome.storage.local.clear(function() {
+    if (chrome.runtime.lastError) {
+      console.error('Clear storage error:', chrome.runtime.lastError);
+    } else {
+      console.log('Storage cleared successfully');
+      // Réinitialiser avec des valeurs par défaut
+      chrome.storage.local.set({
+        notificationsHistory: [],
+        totalEpisodesWatched: 0,
+        totalMinutesWatched: 0
+      }, function() {
+        console.log('Storage reinitialized');
+        debugStorage(); // Afficher le nouveau contenu
+      });
+    }
+  });
+}
+
+// Au début du fichier, après les imports
+const DB_NAME = 'alta-storage';
+const DB_VERSION = 2;
+let db;
+
+// Fonction pour initialiser IndexedDB
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onerror = (event) => {
+      console.error("IndexedDB error:", event.target.error);
+      reject(event.target.error);
+    };
+    
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      console.log("IndexedDB initialized successfully");
+      resolve(db);
+    };
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Store utilisateur
+      if (!db.objectStoreNames.contains('userData')) {
+        const userStore = db.createObjectStore('userData', { keyPath: 'id' });
+        userStore.createIndex('lastLogin', 'lastLogin', { unique: false });
+      }
+
+      // Store anime détaillé
+      if (!db.objectStoreNames.contains('animeList')) {
+        const animeStore = db.createObjectStore('animeList', { keyPath: 'id' });
+        
+        // Indices pour les recherches rapides
+        animeStore.createIndex('mediaId', 'mediaId', { unique: false });
+        animeStore.createIndex('title', ['title.english', 'title.romaji'], { unique: false });
+        animeStore.createIndex('status', 'status', { unique: false });
+        animeStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+        
+        // Structure des données:
+        /*
+        {
+          id: number,
+          mediaId: number,
+          progress: number,
+          totalEpisodes: number,
+          title: {
+            english: string,
+            romaji: string,
+            native: string
+          },
+          coverImage: {
+            medium: string,
+            large: string,
+            extraLarge: string
+          },
+          bannerImage: string,
+          status: string,
+          format: string,
+          season: string,
+          seasonYear: number,
+          genres: string[],
+          averageScore: number,
+          popularity: number,
+          nextAiringEpisode: {
+            airingAt: number,
+            timeUntilAiring: number,
+            episode: number
+          },
+          lastUpdated: number,
+          userStatus: string, // CURRENT, PLANNING, COMPLETED, etc.
+          userScore: number,
+          userStartDate: string,
+          userCompletedDate: string,
+          notes: string
+        }
+        */
+      }
+
+      // Store pour les notifications
+      if (!db.objectStoreNames.contains('notifications')) {
+        const notifStore = db.createObjectStore('notifications', { 
+          keyPath: 'id', 
+          autoIncrement: true 
+        });
+        notifStore.createIndex('animeId', 'animeId', { unique: false });
+        notifStore.createIndex('date', 'date', { unique: false });
+        notifStore.createIndex('type', 'type', { unique: false });
+      }
+
+      // Store pour les statistiques
+      if (!db.objectStoreNames.contains('stats')) {
+        const statsStore = db.createObjectStore('stats', { keyPath: 'id' });
+        statsStore.createIndex('date', 'date', { unique: false });
+      }
+    };
+  });
+}
+
+// Fonction pour sauvegarder dans IndexedDB
+function saveToIndexedDB(storeName, data) {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+    
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data);
+    
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Initialiser la DB au chargement
+window.addEventListener('load', async function() {
+  try {
+    await initDB();
+    console.log('IndexedDB ready to use');
+    
+    // Migrer les données existantes de chrome.storage.local vers IndexedDB
+    chrome.storage.local.get(null, async function(items) {
+      if (Object.keys(items).length > 0) {
+        try {
+          await saveToIndexedDB('userData', {
+            id: 'user',
+            token: items.token,
+            userId: items.userId,
+            type: items.type
+          });
+          
+          await saveToIndexedDB('stats', {
+            id: 'stats',
+            totalEpisodesWatched: items.totalEpisodesWatched || 0,
+            totalMinutesWatched: items.totalMinutesWatched || 0
+          });
+          
+          if (items.notificationsHistory) {
+            for (let notif of items.notificationsHistory) {
+              await saveToIndexedDB('notifications', notif);
+            }
+          }
+          
+          console.log('Data migrated to IndexedDB successfully');
+        } catch (err) {
+          console.error('Error migrating data:', err);
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Failed to initialize IndexedDB:', err);
+  }
+});
+
+// Modifier la fonction storeNotification pour inclure plus d'informations
+function storeNotification(animeTitle, episodeNumber, animeId, coverImage) {
+  chrome.storage.local.get(["notificationsHistory"], async function(result) {
+    let history = result.notificationsHistory || [];
+    const notif = {
+      animeTitle: animeTitle,
+      episodeNumber: episodeNumber,
+      animeId: animeId,
+      coverImage: coverImage,
+      date: Date.now()
+    };
+    
+    history.push(notif);
+    
+    // Sauvegarder dans chrome.storage.local et IndexedDB
+    try {
+      await saveToIndexedDB('notifications', notif);
+      chrome.storage.local.set({ notificationsHistory: history });
+      console.log("Notification saved to both storages");
+    } catch (err) {
+      console.error('Error saving notification:', err);
+    }
+  });
+}
+
+// Fonction pour récupérer depuis IndexedDB avec filtrage
+async function getFromIndexedDB() {
+  const transaction = db.transaction('animeList', 'readonly');
+  const store = transaction.objectStore('animeList');
+  const animes = await new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onsuccess = () => {
+      // On filtre pour ne garder que CURRENT et PAUSED
+      const filtered = request.result.filter(anime => 
+        anime.userStatus === 'CURRENT' || anime.userStatus === 'PAUSED'
+      );
+      resolve(filtered);
+    };
+    request.onerror = () => reject(request.error);
+  });
+  return animes;
+}

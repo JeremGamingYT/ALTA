@@ -9,9 +9,19 @@
 
 *Automatically track your anime progress on AniList while you watch!*
 
-**Current Version: 1.1**
+**Current Version: 1.9**
 
 </div>
+
+### 🆕 What's New in 1.9
+
+- Implemented IndexedDB for more reliable local storage
+- Added support for unlimited storage capacity
+- Enhanced caching system for better performance
+- Improved handling of watching states (CURRENT/PAUSED)
+- Extended anime metadata storage and tracking
+- Added detailed logging for better troubleshooting
+- Optimized data synchronization with AniList
 
 ## ✨ Features
 
@@ -23,6 +33,10 @@
 - 🌐 **Cross-Platform**: Coming to Chrome Web Store in 2025
 - 🎨 **Clean Interface**: Simple and intuitive user interface with improved UI/UX
 - 📱 **Responsive Design**: Better button spacing and visual improvements
+- 💾 **Enhanced Storage**: Robust local storage using IndexedDB
+- ⚡ **Improved Performance**: Better caching and data management
+- 📊 **Extended Metadata**: More detailed anime information tracking
+- 🔍 **Debug Tools**: Improved logging and troubleshooting capabilities
 
 ## 🚀 Installation
 
