@@ -170,7 +170,7 @@ img {
 .centerText {
   width: 100%;
   text-align: center;
-  padding: 10px 6px;
+  padding: 10px 0px;
   background: rgba(0, 0, 0, 0.75);
   position: absolute;
   bottom: 0;

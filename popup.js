@@ -231,7 +231,6 @@ async function getWatching(noCache) {
               ${format}
               status
               title {
-                romaji
                 english
               }
               coverImage {
