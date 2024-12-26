@@ -70,15 +70,6 @@
 4. ALTA will automatically update your progress!
 5. Access global stats and notifications through the toolbar icons
 
-## 🆕 What's New in 1.1
-
-- Added global statistics view with total episodes, mean scores, and more
-- Implemented notifications system to track recent updates
-- Improved UI with better button spacing and visual enhancements
-- Enhanced error handling and API response management
-- Better caching system for improved performance
-- Support for both current and paused anime in lists
-
 ## 🙏 Acknowledgments
 
 - AniList for providing the API
