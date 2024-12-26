@@ -9,19 +9,20 @@
 
 *Automatically track your anime progress on AniList while you watch!*
 
-**Current Version: 1.9**
+**Current Version: 1.11**
 
 </div>
 
-### 🆕 What's New in 1.9
+### 🆕 What's New in 1.11
 
-- Implemented IndexedDB for more reliable local storage
-- Added support for unlimited storage capacity
-- Enhanced caching system for better performance
-- Improved handling of watching states (CURRENT/PAUSED)
-- Extended anime metadata storage and tracking
-- Added detailed logging for better troubleshooting
-- Optimized data synchronization with AniList
+- 🔄 **Enhanced Sync System**: Improved episode detection and progress tracking
+- 📚 **Manga Support**: Switch between anime and manga tracking
+- 💾 **IndexedDB Integration**: Better offline support and data persistence
+- 🎯 **Smart Caching**: Optimized data storage with automatic cache refresh
+- 🔍 **Debug Mode**: Added detailed logging for troubleshooting
+- 🛠️ **Status Management**: Right-click menu for quick status updates
+- ⚡ **Performance Boost**: Faster loading times and smoother animations
+- 🎨 **UI Polish**: Enhanced visual feedback and transitions
 
 ## ✨ Features
 
@@ -37,6 +38,9 @@
 - ⚡ **Improved Performance**: Better caching and data management
 - 📊 **Extended Metadata**: More detailed anime information tracking
 - 🔍 **Debug Tools**: Improved logging and troubleshooting capabilities
+- 📚 **Dual Tracking**: Track both anime and manga progress
+- 🔄 **Format Switching**: Easily switch between anime and manga lists
+- 💾 **Enhanced Storage**: Separate storage for anime and manga data
 
 ## 🚀 Installation
 

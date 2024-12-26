@@ -1,4 +1,3 @@
-/* Variables et reset */
 :root {
   --primary-bg: #1a1b26;
   --secondary-bg: #24283b;
@@ -191,6 +190,7 @@ input[type="search"]:focus {
   z-index: 9;
   padding: var(--spacing-xs) var(--spacing-md);
   display: flex;
+  justify-content: center;
   gap: var(--spacing-md);
   background: var(--secondary-bg);
   border-bottom: 1px solid var(--border-color);
@@ -259,15 +259,43 @@ input[type="search"]:focus {
   top: 10%;
   left: 10%;
   width: 80%;
-  background: var(--secondary-bg);
+  height: 80%;
+  background: rgba(26, 27, 38, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   display: none;
   z-index: 1000;
-  max-height: 80vh;
   overflow-y: auto;
+}
+
+#closePanel {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: var(--hover-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+#closePanel:hover {
+  background: var(--accent-color);
+  color: var(--primary-bg);
+}
+
+#closePanel i {
+  font-size: 1rem;
 }
 
 /* Animations */
@@ -306,7 +334,6 @@ input[type="search"]:focus {
   background: var(--accent-color);
 }
 
-/* Hover effects globaux */
 button:hover:not(:disabled), 
 .primaryBtn:hover:not(:disabled), 
 .secondaryBtn:hover:not(:disabled) {
@@ -325,7 +352,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Cartes d'anime */
 .cell {
   background: var(--secondary-bg);
   border-radius: var(--radius-md);
@@ -368,7 +394,6 @@ button:disabled {
   min-height: 40px;
 }
 
-/* Boutons de progression */
 .cell button {
   background: var(--hover-color);
   color: var(--text-color);
@@ -391,7 +416,6 @@ button:disabled {
   color: var(--primary-bg);
 }
 
-/* Affichage du progrès */
 .cell span {
   background: var(--primary-bg);
   padding: var(--spacing-xs) var(--spacing-sm);
@@ -402,7 +426,6 @@ button:disabled {
   min-width: 60px;
 }
 
-/* Status menu contextuel */
 .statusMenu {
   position: absolute;
   background: var(--secondary-bg);
@@ -432,7 +455,6 @@ button:disabled {
   background: var(--hover-color);
 }
 
-/* Message "pas de résultats" */
 h5 {
   text-align: center;
   color: var(--text-color);
@@ -442,7 +464,6 @@ h5 {
   width: 100%;
 }
 
-/* Améliorations du thème sombre */
 :root {
   --primary-bg: #16161e;
   --secondary-bg: #1a1b26;
@@ -454,19 +475,16 @@ h5 {
   --button-hover: #89b4fa;
 }
 
-/* Glassmorphism pour les overlays */
 .overlayPanel {
   background: rgba(26, 27, 38, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Amélioration des ombres */
 .topBar, .toolbar {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Animation de chargement */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;

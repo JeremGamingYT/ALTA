@@ -265,20 +265,9 @@ async function getWatching(noCache) {
     format = "episodes";
   }
 
-  /*
-    Si tu veux inclure aussi les animes terminés dans la liste,
-    tu peux changer "status: CURRENT" en "status_in: [CURRENT, COMPLETED]"
-
-    query($userId:Int){
-      MediaListCollection(userId:$userId, type:ANIME, status_in:[CURRENT,COMPLETED], sort:UPDATED_TIME){
-        ...
-      }
-    }
-  */
-
   let query = `
     query($userId:Int){
-      MediaListCollection(userId:$userId, type:ANIME, status_in:[CURRENT, PAUSED], sort:UPDATED_TIME){
+      MediaListCollection(userId:$userId, type:${type}, status_in:[CURRENT, PAUSED], sort:UPDATED_TIME){
         lists {
           entries {
             id
@@ -345,15 +334,14 @@ async function getWatching(noCache) {
       return [];
     }
 
-    // Sauvegarder chaque anime dans IndexedDB
+    // Sauvegarder chaque média dans IndexedDB
     const entries = res.data.MediaListCollection.lists[0].entries || [];
     for (let entry of entries) {
-      // On vérifie que le statut est bien CURRENT ou PAUSED
       if (entry.status === 'CURRENT' || entry.status === 'PAUSED') {
         try {
-          await saveAnimeToIndexedDB(entry);
+          await saveMediaToIndexedDB(entry, type);
         } catch (err) {
-          console.error('Error saving anime to IndexedDB:', err);
+          console.error('Error saving media to IndexedDB:', err);
         }
       }
     }
@@ -362,14 +350,14 @@ async function getWatching(noCache) {
 
   // Si pas noCache, essayer d'abord de récupérer depuis IndexedDB
   try {
-    const animes = await getFromIndexedDB();
+    const media = await getFromIndexedDB(type);
     
     // Si les données ont plus d'une heure, forcer un refresh
     const oneHourAgo = Date.now() - (60 * 60 * 1000);
-    if (animes.length === 0 || animes.some(a => a.lastUpdated < oneHourAgo)) {
+    if (media.length === 0 || media.some(m => m.lastUpdated < oneHourAgo)) {
       return getWatching(true);
     }
-    return animes;
+    return media;
   } catch (err) {
     console.error('Error reading from IndexedDB:', err);
     return getWatching(true);
@@ -976,13 +964,13 @@ function resetStorage() {
 
 // Au début du fichier, après les imports
 const DB_NAME = 'alta-storage';
-const DB_VERSION = 2;
+const DB_VERSION = 5;
 let db;
 
 // Fonction pour initialiser IndexedDB
 function initDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = indexedDB.open(DB_NAME, DB_VERSION + 1);
     
     request.onerror = (event) => {
       console.error("IndexedDB error:", event.target.error);
@@ -997,6 +985,17 @@ function initDB() {
     
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+      
+      // Store manga détaillé avec index des titres
+      if (!db.objectStoreNames.contains('mangaList')) {
+        const mangaStore = db.createObjectStore('mangaList', { keyPath: 'id' });
+        
+        // Indices pour les recherches rapides
+        mangaStore.createIndex('mediaId', 'mediaId', { unique: false });
+        mangaStore.createIndex('title', ['title.english', 'title.romaji'], { unique: false });
+        mangaStore.createIndex('status', 'status', { unique: false });
+        mangaStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+      }
       
       // Store utilisateur
       if (!db.objectStoreNames.contains('userData')) {
@@ -1157,19 +1156,69 @@ function storeNotification(animeTitle, episodeNumber, animeId, coverImage) {
 }
 
 // Fonction pour récupérer depuis IndexedDB avec filtrage
-async function getFromIndexedDB() {
-  const transaction = db.transaction('animeList', 'readonly');
-  const store = transaction.objectStore('animeList');
-  const animes = await new Promise((resolve, reject) => {
+async function getFromIndexedDB(type) {
+  const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
+  const transaction = db.transaction(storeName, 'readonly');
+  const store = transaction.objectStore(storeName);
+  
+  const media = await new Promise((resolve, reject) => {
     const request = store.getAll();
     request.onsuccess = () => {
-      // On filtre pour ne garder que CURRENT et PAUSED
-      const filtered = request.result.filter(anime => 
-        anime.userStatus === 'CURRENT' || anime.userStatus === 'PAUSED'
+      const filtered = request.result.filter(item => 
+        item.status === 'CURRENT' || item.status === 'PAUSED'
       );
       resolve(filtered);
     };
     request.onerror = () => reject(request.error);
   });
-  return animes;
+  return media;
+}
+
+// Modifier saveMediaToIndexedDB pour utiliser le bon store selon le type
+async function saveMediaToIndexedDB(mediaData, type) {
+  try {
+    const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
+    
+    if (mediaData.status !== 'CURRENT' && mediaData.status !== 'PAUSED') {
+      const store = db.transaction(storeName, 'readwrite').objectStore(storeName);
+      await store.delete(mediaData.id);
+      return null;
+    }
+
+    const store = db.transaction(storeName, 'readwrite').objectStore(storeName);
+    
+    const enrichedData = {
+      id: mediaData.id,
+      mediaId: mediaData.mediaId,
+      progress: mediaData.progress,
+      totalCount: type === 'MANGA' ? mediaData.media?.chapters : mediaData.media?.episodes,
+      title: {
+        english: mediaData.media?.title?.english || null,
+        romaji: mediaData.media?.title?.romaji || null,
+        native: mediaData.media?.title?.native || null
+      },
+      coverImage: {
+        medium: mediaData.media?.coverImage?.medium || null,
+        large: mediaData.media?.coverImage?.large || null,
+        extraLarge: mediaData.media?.coverImage?.extraLarge || null
+      },
+      bannerImage: mediaData.media?.bannerImage || null,
+      status: mediaData.status,
+      format: mediaData.media?.format || null,
+      season: mediaData.media?.season || null,
+      seasonYear: mediaData.media?.seasonYear || null,
+      genres: mediaData.media?.genres || [],
+      averageScore: mediaData.media?.averageScore || null,
+      popularity: mediaData.media?.popularity || null,
+      nextAiringEpisode: mediaData.media?.nextAiringEpisode || null,
+      lastUpdated: Date.now()
+    };
+
+    await store.put(enrichedData);
+    console.log(`${type} saved/updated in IndexedDB:`, enrichedData);
+    return enrichedData;
+  } catch (err) {
+    console.error(`Error saving ${type} to IndexedDB:`, err);
+    throw err;
+  }
 }
