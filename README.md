@@ -15,67 +15,63 @@
 
 ### 🆕 What's New in 1.12
 
-- 🎨 **Enhanced Status Menu**: Added colorful icons and improved visual design
-- 🖱️ **Better Interaction**: Improved button layout and click feedback
+- 🎨 **Enhanced Status Menu**: Colorful icons, improved visual design
+- 🖱️ **Better Interaction**: Improved button layout, click feedback
 - 💅 **Visual Polish**: Enhanced spacing and alignment in status dropdown
 - 🎯 **Status Indicators**: Clear visual feedback for current status
 - ⚡ **UI Improvements**: Smoother transitions and better accessibility
 
-## ✨ Features
+## ✨ Core Features
 
-- 🔄 **Automatic Progress Tracking**: Updates your AniList progress in real-time while watching
-- 🎯 **Smart Detection**: Automatically identifies the anime you're watching
-- 📊 **Enhanced Statistics**: View your global anime statistics including total episodes watched and mean scores
-- 🔔 **Notifications System**: Track your recent updates and activities
-- 🔒 **Secure Authentication**: Safe and secure connection with your AniList account
-- 🌐 **Cross-Platform**: Coming to Chrome Web Store in 2025
-- 🎨 **Clean Interface**: Simple and intuitive user interface with improved UI/UX
-- 📱 **Responsive Design**: Better button spacing and visual improvements
-- 💾 **Enhanced Storage**: Robust local storage using IndexedDB
-- ⚡ **Improved Performance**: Better caching and data management
-- 📊 **Extended Metadata**: More detailed anime information tracking
-- 🔍 **Debug Tools**: Improved logging and troubleshooting capabilities
-- 📚 **Dual Tracking**: Track both anime and manga progress
-- 🔄 **Format Switching**: Easily switch between anime and manga lists
-- 💾 **Enhanced Storage**: Separate storage for anime and manga data
+- 🔄 **Real-Time Progress Tracking**: Updates your AniList activity as you watch.
+- 🎯 **Intelligent Detection**: Automatically identifies the anime being viewed.
+- 📊 **Detailed Statistics**: Access your total watch history and mean scores.
+- 🔔 **Notifications**: Stay updated with activity alerts.
+- 🔒 **Secure Login**: Safely connect your AniList account.
+- 🌐 **Cross-Platform Ready**: Available on Chrome/Edge/Opera/Brave (web store coming in 2025).
+- 🎨 **User-Friendly Interface**: Sleek design with intuitive navigation.
+- 📱 **Responsive Design**: Optimized for all device sizes.
+- 💾 **Advanced Storage**: Uses IndexedDB for robust local data storage.
+- ⚡ **Performance Boost**: Improved caching and faster data handling.
+- 📊 **Richer Metadata**: Comprehensive anime details.
+- 🔍 **Debug Tools**: Enhanced error tracking and logs.
+- 📚 **Dual Tracking**: Tracks both anime and manga.
+- 🔄 **Format Switching**: Switch seamlessly between anime and manga lists.
 
 ## 🚀 Installation
 
 ### Chrome (Manual Installation)
 1. Download the latest release from GitHub
-2. Enable Developer mode in Chrome extensions
-3. Click "Load unpacked" and select the downloaded folder
+2. Enable “Developer mode” in your Chrome Extensions settings.
+3. Select “Load unpacked” and upload the downloaded folder.
 
-> 📝 Note: ALTA will be available on the Chrome Web Store in 2025! Until then, please use the manual installation method.
+> 📝 Note: ALTA will be officially available on the Chrome Web Store in 2025. For now, manual installation is required.
 
 ## 💻 Development Setup
 
-1. Clone the repository
-2. Copy `config.example.js` to a new file named `background.js`
-3. Enable Developer mode in your browser's extension settings
+1. Clone the GitHub repository.
+2. Rename config.example.js to background.js.
+3. Activate “Developer mode” in your browser’s extension settings.
 4. Set up your AniList API client:
-   - Go to [AniList Developer Settings](https://anilist.co/settings/developer)
-   - Create a new client
-   - Set redirect URL to: `https://[YOUR-EXTENSION-ID].chromiumapp.org/`
+   - Navigate to [AniList Developer Settings](https://anilist.co/settings/developer)
+   - Create a new client and set the redirect URL: `https://[YOUR-EXTENSION-ID].chromiumapp.org/`.
    - Copy your Client ID to `data.js`
-5. Update `background.js` with your AniList credentials
-6. Load the unpacked extension
+5.	Update `background.js` with AniList credentials.
+6.	Load the unpacked extension in your browser.
 
-⚠️ **Security Note**: Never commit your personal AniList credentials to the repository. The files containing sensitive information (`background.js` and `data.js`) are already in `.gitignore`.
+⚠️ **Security Tip**: Never commit personal AniList credentials to the repository. Sensitive files (`background.js` and `data.js`) are included in `.gitignore` for protection.
 
-## 🛠️ Usage
+## 🛠️ Using ALTA
 
-1. Click the ALTA icon in your browser toolbar
-2. Log in with your AniList account
-3. Start watching on supported platforms
-4. ALTA will automatically update your progress!
-5. Access global stats and notifications through the toolbar icons
+1. Launch ALTA via the browser toolbar icon.
+2. Log in with your AniList credentials.
+3. Start streaming on supported platforms.
+4. ALTA will sync your progress automatically!
+5. Explore stats and notifications using the toolbar options.
 
 ## 🙏 Acknowledgments
 
-- AniList for providing the API
-- All contributors and users who helped improve ALTA
-- The anime community for their continued support
+- Special thanks to AniList for their API, contributors, and the passionate anime community for their support!
 
 ## 📝 License
 
@@ -84,5 +80,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-Made with ❤️ for the anime community
+Made with ❤️ for the anime community/Fans!
 </div>
