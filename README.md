@@ -21,17 +21,6 @@
 - 🎯 **Status Indicators**: Clear visual feedback for current status
 - ⚡ **UI Improvements**: Smoother transitions and better accessibility
 
-### 🆕 What's New in 1.11
-
-- 🔄 **Enhanced Sync System**: Improved episode detection and progress tracking
-- 📚 **Manga Support**: Switch between anime and manga tracking
-- 💾 **IndexedDB Integration**: Better offline support and data persistence
-- 🎯 **Smart Caching**: Optimized data storage with automatic cache refresh
-- 🔍 **Debug Mode**: Added detailed logging for troubleshooting
-- 🛠️ **Status Management**: Right-click menu for quick status updates
-- ⚡ **Performance Boost**: Faster loading times and smoother animations
-- 🎨 **UI Polish**: Enhanced visual feedback and transitions
-
 ## ✨ Features
 
 - 🔄 **Automatic Progress Tracking**: Updates your AniList progress in real-time while watching
