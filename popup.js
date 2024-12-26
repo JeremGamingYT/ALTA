@@ -483,18 +483,38 @@ function updateImages() {
     menu.style.borderRadius = "6px";
     menu.style.padding = "8px";
     menu.style.zIndex = 999999;
-    menu.style.minWidth = "100px";
+    menu.style.minWidth = "150px";
   
-    // Quelques choix de statuts
-    const statuses = ["CURRENT", "COMPLETED", "PAUSED", "DROPPED", "PLANNING"];
+    // Statuts avec leurs icônes correspondantes
+    const statusConfig = {
+      "CURRENT": { icon: "fa-solid fa-play", color: "#7aa2f7" },
+      "COMPLETED": { icon: "fa-solid fa-check", color: "#9ece6a" },
+      "PAUSED": { icon: "fa-solid fa-pause", color: "#e0af68" },
+      "DROPPED": { icon: "fa-solid fa-xmark", color: "#f7768e" },
+      "PLANNING": { icon: "fa-solid fa-clock", color: "#bb9af7" }
+    };
   
-    statuses.forEach(st => {
+    Object.entries(statusConfig).forEach(([st, config]) => {
       let btn = document.createElement("button");
-      btn.textContent = st;
-      btn.style.display = "block";
+      btn.style.display = "flex";
+      btn.style.alignItems = "center";
+      btn.style.gap = "8px";
+      btn.style.width = "100%";
       btn.style.margin = "4px 0";
+      btn.style.padding = "8px 12px";
       
-      // Désactiver le bouton si c'est le statut actuel
+      // Ajout de l'icône
+      let icon = document.createElement("i");
+      icon.className = config.icon;
+      icon.style.color = config.color;
+      icon.style.width = "16px";
+      
+      let text = document.createElement("span");
+      text.textContent = st;
+      
+      btn.appendChild(icon);
+      btn.appendChild(text);
+      
       if (st === mediaList.status) {
         btn.disabled = true;
         btn.style.opacity = "0.5";
@@ -502,9 +522,7 @@ function updateImages() {
         btn.title = "Current status";
       } else {
         btn.addEventListener("click", function() {
-          // Quand on clique sur un statut, on appelle la mutation
           updateAnimeStatus(mediaList.id, st);
-          // On retire le menu
           menu.remove();
         });
       }

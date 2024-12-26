@@ -9,9 +9,17 @@
 
 *Automatically track your anime progress on AniList while you watch!*
 
-**Current Version: 1.11**
+**Current Version: 1.12**
 
 </div>
+
+### 🆕 What's New in 1.12
+
+- 🎨 **Enhanced Status Menu**: Added colorful icons and improved visual design
+- 🖱️ **Better Interaction**: Improved button layout and click feedback
+- 💅 **Visual Polish**: Enhanced spacing and alignment in status dropdown
+- 🎯 **Status Indicators**: Clear visual feedback for current status
+- ⚡ **UI Improvements**: Smoother transitions and better accessibility
 
 ### 🆕 What's New in 1.11
 
