@@ -265,97 +265,96 @@ async function getWatching(noCache) {
     format = "episodes";
   }
 
-  let query = `
-    query($userId:Int){
-      MediaListCollection(userId:$userId, type:${type}, status_in:[CURRENT, PAUSED], sort:UPDATED_TIME){
-        lists {
-          entries {
-            id
-            mediaId
-            progress
+  // Si pas de userId, retourner une liste vide
+  if (!userId) {
+    console.log("No userId found, returning empty list");
+    return [];
+  }
+
+  if (noCache) {
+    let query = `
+      query($userId:Int){
+        MediaListCollection(userId:$userId, type:${type}, status_in:[CURRENT,PAUSED], sort:UPDATED_TIME){
+          lists {
+            name
             status
-            score
-            startedAt {
-              year
-              month
-              day
-            }
-            completedAt {
-              year
-              month
-              day
-            }
-            notes
-            media {
-              ${format}
+            entries {
+              id
+              mediaId
+              progress
               status
-              title {
-                english
-                native
-              }
-              coverImage {
-                medium
-                large
-                extraLarge
-              }
-              bannerImage
-              format
-              season
-              seasonYear
-              genres
-              averageScore
-              popularity
-              nextAiringEpisode {
-                airingAt
-                timeUntilAiring
-                episode
+              score
+              media {
+                ${format}
+                status
+                title {
+                  english
+                  native
+                }
+                coverImage {
+                  medium
+                  large
+                  extraLarge
+                }
               }
             }
           }
         }
       }
-    }
-  `;
-  let variables = { userId: parseInt(userId) };
+    `;
+    let variables = { userId: parseInt(userId) };
 
-  if (noCache) {
     let res = await fetch(SERVICE_URL, getOptions(query, variables))
       .then(r => r.json())
       .catch(e => {
-        console.log("Reponse de AniList (getWatching):", JSON.stringify(res, null, 2));
+        console.error("Error fetching from AniList:", e);
         return null;
       });
-    if (!res || !res.data || !res.data.MediaListCollection) {
-      console.log("Aucune liste trouvée ou data manquante =>", res);
-      return [];
-    }
-    if (!res.data.MediaListCollection.lists || res.data.MediaListCollection.lists.length === 0) {
+
+    // Ajout des logs de débogage
+    console.log("API Response:", res);
+    
+    // Le problème est probablement ici - la structure de la réponse est différente
+    if (!res?.data?.MediaListCollection?.lists) {
+      console.log("No lists found in API response");
       return [];
     }
 
-    // Sauvegarder chaque média dans IndexedDB
-    const entries = res.data.MediaListCollection.lists[0].entries || [];
-    for (let entry of entries) {
-      if (entry.status === 'CURRENT' || entry.status === 'PAUSED') {
-        try {
-          await saveMediaToIndexedDB(entry, type);
-        } catch (err) {
-          console.error('Error saving media to IndexedDB:', err);
-        }
+    // Modification pour gérer plusieurs listes
+    const allEntries = res.data.MediaListCollection.lists.reduce((acc, list) => {
+      console.log("Processing list:", list.name, "with status:", list.status);
+      return acc.concat(list.entries || []);
+    }, []);
+
+    console.log("All entries combined:", allEntries);
+    
+    // Sauvegarder dans IndexedDB
+    for (let entry of allEntries) {
+      try {
+        await saveMediaToIndexedDB(entry, type);
+      } catch (err) {
+        console.error('Error saving to IndexedDB:', err);
       }
     }
-    return entries;
+
+    return allEntries;
   }
 
-  // Si pas noCache, essayer d'abord de récupérer depuis IndexedDB
+  // Essayer de récupérer depuis IndexedDB
   try {
-    const media = await getFromIndexedDB(type);
-    
-    // Si les données ont plus d'une heure, forcer un refresh
-    const oneHourAgo = Date.now() - (60 * 60 * 1000);
-    if (media.length === 0 || media.some(m => m.lastUpdated < oneHourAgo)) {
+    if (!db) {
+      console.log("IndexedDB not initialized, fetching from API");
       return getWatching(true);
     }
+
+    const media = await getFromIndexedDB(type);
+    console.log(`Retrieved ${media.length} entries from IndexedDB`);
+    
+    if (media.length === 0) {
+      console.log("No entries in IndexedDB, fetching from API");
+      return getWatching(true);
+    }
+
     return media;
   } catch (err) {
     console.error('Error reading from IndexedDB:', err);
@@ -696,6 +695,12 @@ async function updateAnimeStatus(listEntryId, newStatus) {
         id
         mediaId
         status
+        media {
+          title {
+            english
+            native
+          }
+        }
       }
     }
   `;
@@ -715,6 +720,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
     }
 
     const savedEntry = json.data.SaveMediaListEntry;
+    console.log('Status updated to:', newStatus, 'for anime:', savedEntry.media.title.english); // Debug log
     
     if (newStatus === 'CURRENT' || newStatus === 'PAUSED') {
       // Mettre à jour l'anime complet dans IndexedDB
@@ -725,7 +731,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
       await store.delete(savedEntry.id);
     }
 
-    // Rafraîchir la liste complète
+    // Forcer un rafraîchissement complet depuis l'API
     fullList = await getWatching(true);
     displayedList = fullList;
     updateImages();
@@ -1161,6 +1167,7 @@ async function getFromIndexedDB(type) {
   const media = await new Promise((resolve, reject) => {
     const request = store.getAll();
     request.onsuccess = () => {
+      // Filtrer explicitement pour CURRENT et PAUSED
       const filtered = request.result.filter(item => 
         item.status === 'CURRENT' || item.status === 'PAUSED'
       );
@@ -1168,53 +1175,46 @@ async function getFromIndexedDB(type) {
     };
     request.onerror = () => reject(request.error);
   });
+  
+  // Si aucun résultat, recharger depuis l'API
+  if (media.length === 0) {
+    console.log('No CURRENT or PAUSED items found in IndexedDB');
+    return getWatching(true);
+  }
+  
   return media;
 }
 
-// Modifier saveMediaToIndexedDB pour utiliser le bon store selon le type
+// Modifier saveMediaToIndexedDB pour gérer correctement le statut
 async function saveMediaToIndexedDB(mediaData, type) {
   try {
-    const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
-    
+    // Si le statut n'est pas CURRENT ou PAUSED, supprimer de IndexedDB
     if (mediaData.status !== 'CURRENT' && mediaData.status !== 'PAUSED') {
-      const store = db.transaction(storeName, 'readwrite').objectStore(storeName);
+      const store = db.transaction(type === 'MANGA' ? 'mangaList' : 'animeList', 'readwrite')
+        .objectStore(type === 'MANGA' ? 'mangaList' : 'animeList');
       await store.delete(mediaData.id);
       return null;
     }
 
+    // Sinon, sauvegarder normalement
+    const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
     const store = db.transaction(storeName, 'readwrite').objectStore(storeName);
     
     const enrichedData = {
       id: mediaData.id,
       mediaId: mediaData.mediaId,
       progress: mediaData.progress,
-      totalCount: type === 'MANGA' ? mediaData.media?.chapters : mediaData.media?.episodes,
-      title: {
-        english: mediaData.media?.title?.english || null,
-        native: mediaData.media?.title?.native || null
-      },
-      coverImage: {
-        medium: mediaData.media?.coverImage?.medium || null,
-        large: mediaData.media?.coverImage?.large || null,
-        extraLarge: mediaData.media?.coverImage?.extraLarge || null
-      },
-      bannerImage: mediaData.media?.bannerImage || null,
       status: mediaData.status,
-      format: mediaData.media?.format || null,
-      season: mediaData.media?.season || null,
-      seasonYear: mediaData.media?.seasonYear || null,
-      genres: mediaData.media?.genres || [],
-      averageScore: mediaData.media?.averageScore || null,
-      popularity: mediaData.media?.popularity || null,
-      nextAiringEpisode: mediaData.media?.nextAiringEpisode || null,
+      score: mediaData.score,
+      media: mediaData.media,
       lastUpdated: Date.now()
     };
 
     await store.put(enrichedData);
-    console.log(`${type} saved/updated in IndexedDB:`, enrichedData);
+    console.log(`Saved to IndexedDB:`, enrichedData);
     return enrichedData;
   } catch (err) {
-    console.error(`Error saving ${type} to IndexedDB:`, err);
+    console.error(`Error saving to IndexedDB:`, err);
     throw err;
   }
 }
