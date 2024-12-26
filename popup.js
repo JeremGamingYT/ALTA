@@ -291,7 +291,6 @@ async function getWatching(noCache) {
               status
               title {
                 english
-                romaji
                 native
               }
               coverImage {
@@ -435,8 +434,10 @@ function updateImages() {
           height="${thumbHeight}px"
           width="${thumbWidth}px"
           src="${mediaList.media.coverImage.medium}"
-          title="${mediaList.media.title.romaji || mediaList.media.title.english}"
         />
+        <div class="title-overlay">
+          <span>${mediaList.media.title.english || mediaList.media.title.native || 'Untitled'}</span>
+        </div>
       </a>
     `;
     let decrement = `
@@ -545,7 +546,6 @@ async function saveAnimeToIndexedDB(animeData) {
       totalEpisodes: animeData.media?.episodes || null,
       title: {
         english: animeData.media?.title?.english || null,
-        romaji: animeData.media?.title?.romaji || null,
         native: animeData.media?.title?.native || null
       },
       coverImage: {
@@ -589,7 +589,6 @@ async function updateAnimeFromAPI(mediaId) {
           status
           title {
             english
-            romaji
             native
           }
           coverImage {
@@ -726,8 +725,9 @@ async function updateAnimeStatus(listEntryId, newStatus) {
       await store.delete(savedEntry.id);
     }
 
-    // Rafraîchir l'affichage depuis IndexedDB
-    displayedList = await getFromIndexedDB();
+    // Rafraîchir la liste complète
+    fullList = await getWatching(true);
+    displayedList = fullList;
     updateImages();
   } catch (err) {
     console.error('Error updating anime status:', err);
@@ -866,10 +866,8 @@ function searchList(e) {
   let query = searchInput.value.trim().toUpperCase();
   if (query) {
     displayedList = fullList.filter(function(item) {
-      let romaji = item.media.title.romaji || "";
       let english = item.media.title.english || "";
       return (
-        romaji.toUpperCase().includes(query) ||
         english.toUpperCase().includes(query)
       );
     });
@@ -992,7 +990,7 @@ function initDB() {
         
         // Indices pour les recherches rapides
         mangaStore.createIndex('mediaId', 'mediaId', { unique: false });
-        mangaStore.createIndex('title', ['title.english', 'title.romaji'], { unique: false });
+        mangaStore.createIndex('title', ['title.english'], { unique: false });
         mangaStore.createIndex('status', 'status', { unique: false });
         mangaStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
       }
@@ -1009,7 +1007,7 @@ function initDB() {
         
         // Indices pour les recherches rapides
         animeStore.createIndex('mediaId', 'mediaId', { unique: false });
-        animeStore.createIndex('title', ['title.english', 'title.romaji'], { unique: false });
+        animeStore.createIndex('title', ['title.english'], { unique: false });
         animeStore.createIndex('status', 'status', { unique: false });
         animeStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
         
@@ -1022,7 +1020,6 @@ function initDB() {
           totalEpisodes: number,
           title: {
             english: string,
-            romaji: string,
             native: string
           },
           coverImage: {
@@ -1194,7 +1191,6 @@ async function saveMediaToIndexedDB(mediaData, type) {
       totalCount: type === 'MANGA' ? mediaData.media?.chapters : mediaData.media?.episodes,
       title: {
         english: mediaData.media?.title?.english || null,
-        romaji: mediaData.media?.title?.romaji || null,
         native: mediaData.media?.title?.native || null
       },
       coverImage: {

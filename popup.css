@@ -356,7 +356,7 @@ button:disabled {
   background: var(--secondary-bg);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -364,12 +364,12 @@ button:disabled {
   display: flex;
   flex-direction: column;
   min-height: 280px;
+  transform: translateY(0);
 }
 
 .cell:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--accent-color);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
 }
 
 .cell img {
@@ -377,11 +377,13 @@ button:disabled {
   height: 220px;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  transition: all 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
 }
 
 .cell:hover img {
-  filter: brightness(1.1);
+  transform: scale(1.05);
+  filter: brightness(0.8) saturate(1.2);
 }
 
 .centerText {
@@ -392,6 +394,11 @@ button:disabled {
   font-size: 0.9rem;
   margin-top: auto;
   min-height: 40px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cell:hover .centerText {
+  transform: translateY(-4px);
 }
 
 .cell button {
@@ -405,15 +412,18 @@ button:disabled {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1.1rem;
   padding: 0;
   margin: 0 var(--spacing-xs);
+  transform: scale(1);
 }
 
 .cell button:hover {
+  transform: scale(1.15);
   background: var(--accent-color);
   color: var(--primary-bg);
+  box-shadow: 0 0 12px rgba(122, 162, 247, 0.3);
 }
 
 .cell span {
@@ -502,4 +512,78 @@ h5 {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Status Menu Styles */
+#statusMenu {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+}
+
+#statusMenu button {
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: block;
+  margin: 2px 0;
+}
+
+#statusMenu button:hover {
+  background: var(--hover-color);
+  color: var(--accent-color);
+}
+
+.cell .title-overlay {
+  position: absolute;
+  top: 0px;
+  left: 0;
+  width: 100%;
+  height: 238px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+  text-align: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  
+  & span {
+    background: rgba(0, 0, 0, 0.5);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    max-width: 90%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.8em;
+  }
+}
+
+.cell:hover .title-overlay {
+  opacity: 1;
 }
