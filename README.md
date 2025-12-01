@@ -1,172 +1,136 @@
-# 🎬 ALTA - Crunchyroll + AniList Extension
-
-Extension Chrome pour synchroniser automatiquement votre progression Crunchyroll avec AniList.
-
-## ✨ Nouvelles Fonctionnalités (v1.11+)
-
-### 🔄 Synchronisation Watchlist Crunchyroll
-- **Interception automatique** de l'API watchlist Crunchyroll
-- **Détection intelligente** du progrès réel (épisode regardé vs. à regarder)
-- **Synchronisation progressive** avec rate-limiting (2s entre requêtes)
-- **Interface moderne** avec suivi en temps réel
-- **Cache intelligent** pour éviter les requêtes répétées
-
-## 🚀 Installation
-
-1. **Clonez le repo** ou téléchargez les fichiers
-2. **Ouvrez Chrome** et allez sur `chrome://extensions/`
-3. **Activez le mode développeur** (en haut à droite)
-4. **Cliquez sur "Charger l'extension non empaquetée"**
-5. **Sélectionnez** le dossier du projet
-
-## 🎮 Utilisation
-
-### Configuration Initiale
-1. Cliquez sur l'icône ALTA dans la barre d'outils
-2. Cliquez sur "Log In" pour vous connecter à AniList
-3. Autorisez l'extension
-
-### Synchronisation Manuelle (Épisode par Épisode)
-- Regardez un anime sur Crunchyroll
-- L'extension détectera automatiquement votre progression
-- Cliquez sur +/- dans le popup pour ajuster manuellement
-
-### 🆕 Synchronisation Watchlist (NOUVEAU !)
-
-#### Méthode 1 : Automatique
-1. **Visitez** votre watchlist Crunchyroll : https://www.crunchyroll.com/watchlist
-2. **Attendez** que la page charge complètement
-3. **Ouvrez** le popup ALTA
-4. **Cliquez** sur l'icône 🔄 (Watchlist Sync)
-5. Les données sont automatiquement capturées !
-
-#### Méthode 2 : Manuelle
-1. **Ouvrez** le popup ALTA
-2. **Cliquez** sur l'icône 🔄
-3. **Cliquez** sur "Synchroniser Maintenant"
-4. **Observez** la barre de progression en temps réel
-
-## 🐛 Dépannage
-
-### "No watchlist data available"
-
-Cette erreur signifie que l'extension n'a pas encore capturé les données de votre watchlist.
-
-**Solution rapide** :
-1. Allez sur https://www.crunchyroll.com/watchlist
-2. Attendez que la page charge complètement
-3. Actualisez la page (F5) si nécessaire
-4. Retournez au popup et réessayez
-
-**Debug complet** : Consultez [DEBUG_WATCHLIST.md](./DEBUG_WATCHLIST.md)
-
-### Vérifier que l'interception fonctionne
-
-1. Ouvrez https://www.crunchyroll.com/watchlist
-2. Ouvrez DevTools (F12) → Console
-3. Cherchez ces messages :
-   ```
-   ✅ ALTA: Fetch interceptor installed successfully
-   ✅ ALTA: Intercepted Watchlist API call: ...
-   ✅ ALTA: Captured watchlist data
-   ```
-
-Si vous ne voyez PAS ces messages, rechargez l'extension :
-1. `chrome://extensions/`
-2. Trouvez ALTA
-3. Cliquez sur ⟳ (Recharger)
-
-## 📊 Fonctionnalités
-
-- ✅ Connexion AniList OAuth
-- ✅ Détection automatique des épisodes regardés
-- ✅ Mise à jour manuelle du progrès (+/-)
-- ✅ Notifications pour nouveaux épisodes
-- ✅ Statistiques de visionnage
-- ✅ **NOUVEAU** : Sync complète de la watchlist Crunchyroll
-- ✅ **NOUVEAU** : Rate-limiting intelligent
-- ✅ **NOUVEAU** : Cache de mapping Crunchyroll ↔ AniList
-
-## 🔧 Configuration
-
-### Fichier `data.js`
-Créez un fichier `data.js` basé sur `data.js.example` :
-
-```javascript
-const clientData = {
-  clientId: "VOTRE_CLIENT_ID_ANILIST"
-};
-```
-
-Obtenez votre Client ID sur : https://anilist.co/settings/developer
-
-## 📁 Structure du Projet
-
-```
-ALTA/
-├── manifest.json                    # Configuration de l'extension
-├── background.js                    # Service worker (sync logic)
-├── popup.html/js/css               # Interface utilisateur
-├── crunchyroll-interceptor.js      # Interception API watchlist
-├── crunchyroll-content-bridge.js   # Bridge pour messages
-├── crunchyroll-content.js          # Détection épisodes
-├── data.js                         # Configuration OAuth
-└── DEBUG_WATCHLIST.md              # Guide de dépannage
-```
-
-## 🛠️ Technologies
-
-- **Manifest V3** (Chrome Extensions)
-- **AniList GraphQL API**
-- **Crunchyroll Internal API** (interception)
-- **IndexedDB** pour le cache local
-- **Chrome Storage API**
-
-## 📝 Notes Importantes
-
-### Rate Limiting
-L'extension respecte les limites de l'API AniList :
-- **2 secondes** entre chaque requête de sync
-- **Max ~30 requêtes/minute** (limite AniList : 90/min)
-
-### Cache
-Le cache de mapping Crunchyroll → AniList est stocké indéfiniment pour éviter les recherches répétées.
-
-Pour vider le cache :
-```javascript
-chrome.storage.local.remove('anilist_search_cache')
-```
-
-### Données Personnelles
-L'extension stocke uniquement :
-- Votre token AniList (localement)
-- Le mapping des animes
-- Votre watchlist Crunchyroll (localement)
-
-**Aucune donnée n'est envoyée à des serveurs tiers.**
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues !
-
-1. Fork le projet
-2. Créez une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
-
-## 📜 Licence
-
-Voir le fichier [LICENSE](./LICENSE)
-
-## 🙏 Crédits
-
-- **AniList** pour l'API GraphQL
-- **Crunchyroll** (interception non officielle)
-- **Font Awesome** pour les icônes
+# ALTA – Crunchyroll + AniList Extension  
+**⚠️ Important: this project is currently being moved (or has already been moved) to a far more advanced extension: [URL].**  
+Download it — it completely redesigns **Crunchyroll** (a cleaner, modern UI) and adds **full AniList integration**.  
+This new extension is the true evolution of ALTA: more stable, more powerful, and simply better to use.
 
 ---
 
-**Auteur** : JeremGaming  
-**Version** : 1.11+  
-**Dernière mise à jour** : 2025-11-30
+## Overview
+
+ALTA is a Chrome extension designed to automatically sync your Crunchyroll watching progress with AniList.  
+It intercepts real-time viewing data, updates your lists instantly, and provides a fast, modern interface to manage your anime progress.
+
+---
+
+## New Features (v1.11+)
+
+### Advanced Crunchyroll Watchlist Sync
+- Direct, reliable interception of Crunchyroll’s internal API  
+- Accurate progress detection (episode actually watched vs. queued)  
+- Incremental syncing with safe rate-limiting (2s between requests)  
+- Real-time progress display  
+- Smart local caching to reduce redundant requests
+
+---
+
+## Installation
+
+1. Clone or download the project  
+2. Open Chrome and go to `chrome://extensions/`  
+3. Enable **Developer Mode**  
+4. Click **Load unpacked**  
+5. Select the project folder
+
+---
+
+## Usage
+
+### Initial Setup
+1. Click the ALTA icon  
+2. Log into AniList via OAuth  
+3. Grant authorization
+
+### Episode-by-Episode Sync
+- The extension automatically detects your watching progress  
+- Use the +/- buttons in the popup if you need to adjust manually
+
+### Watchlist Sync
+
+#### Automatic Method
+1. Go to: https://www.crunchyroll.com/watchlist  
+2. Wait for the page to fully load  
+3. Open the ALTA popup  
+4. Click the sync icon  
+5. Data is detected and processed automatically
+
+#### Manual Method
+1. Open ALTA  
+2. Click the sync icon  
+3. Select **Sync Now**  
+4. Watch the progress bar update live
+
+---
+
+## Troubleshooting
+
+### “No watchlist data available”
+This means no data has been captured from Crunchyroll yet.
+
+**Quick Fix:**  
+1. Open: https://www.crunchyroll.com/watchlist  
+2. Wait for it to fully load  
+3. Refresh the page if needed  
+4. Try syncing again
+
+A full troubleshooting guide is available in **DEBUG_WATCHLIST.md**
+
+### Check if Interception Works
+```
+Open DevTools (F12 → Console) and look for:
+ALTA: Fetch interceptor installed successfully
+ALTA: Intercepted Watchlist API call: ...
+ALTA: Captured watchlist data
+```
+
+If these are missing:  
+1. Go to `chrome://extensions/`  
+2. Locate ALTA  
+3. Click **Reload**
+
+---
+
+## Features
+
+- AniList OAuth login  
+- Automatic episode detection  
+- Manual progress controls (+ / -)  
+- Episode release notifications  
+- Viewing statistics  
+- Full Crunchyroll watchlist sync  
+- Smart rate-limiting  
+- Crunchyroll ↔ AniList caching system
+
+---
+
+## Configuration
+
+Create a `data.js` file based on `data.js.example`:
+
+```js
+const clientData = {
+  clientId: "YOUR_ANILIST_CLIENT_ID"
+};
+```
+Get your Client ID here: https://anilist.co/settings/developer
+
+## Project Structure
+```
+ALTA/
+├── manifest.json
+├── background.js
+├── popup.html/js/css
+├── crunchyroll-interceptor.js
+├── crunchyroll-content-bridge.js
+├── crunchyroll-content.js
+├── data.js
+└── DEBUG_WATCHLIST.md
+```
+## License
+
+## Credits
+ - AniList (GraphQL API)
+ - Crunchyroll (unofficial interception)
+ - Font Awesome (icons)
+**Author**: JeremGaming
+**Version**: 1.11+
+**Last Updated**: 2025-11-30
