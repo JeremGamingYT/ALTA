@@ -1,5 +1,5 @@
 # ALTA – Crunchyroll + AniList Extension  
-**⚠️ Important: this project is currently being moved (or has already been moved) to a far more advanced extension: [URL].**  
+**⚠️ Important: this project is currently being moved (or has already been moved) to a far more advanced extension: [https://github.com/JeremGamingYT/BetterCrunchyroll].**  
 Download it — it completely redesigns **Crunchyroll** (a cleaner, modern UI) and adds **full AniList integration**.  
 This new extension is the true evolution of ALTA: more stable, more powerful, and simply better to use.
 
