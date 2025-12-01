@@ -1,84 +1,172 @@
-# ALTA - AniList Track Assistant 🎬
+# 🎬 ALTA - Crunchyroll + AniList Extension
 
-<div align="center">
+Extension Chrome pour synchroniser automatiquement votre progression Crunchyroll avec AniList.
 
-![ALTA Logo](images/icon-64.png)
+## ✨ Nouvelles Fonctionnalités (v1.11+)
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ggjlaakenonjlionbnebgbje?style=for-the-badge)](https://github.com/JeremGamingYT/ALTA)
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeremGamingYT/ALTA)
-
-*Automatically track your anime progress on AniList while you watch!*
-
-**Current Version: 1.12**
-
-</div>
-
-### 🆕 What's New in 1.12
-
-- 🎨 **Enhanced Status Menu**: Colorful icons, improved visual design
-- 🖱️ **Better Interaction**: Improved button layout, click feedback
-- 💅 **Visual Polish**: Enhanced spacing and alignment in status dropdown
-- 🎯 **Status Indicators**: Clear visual feedback for current status
-- ⚡ **UI Improvements**: Smoother transitions and better accessibility
-
-## ✨ Core Features
-
-- 🔄 **Real-Time Progress Tracking**: Updates your AniList activity as you watch.
-- 🎯 **Intelligent Detection**: Automatically identifies the anime being viewed.
-- 📊 **Detailed Statistics**: Access your total watch history and mean scores.
-- 🔔 **Notifications**: Stay updated with activity alerts.
-- 🔒 **Secure Login**: Safely connect your AniList account.
-- 🌐 **Cross-Platform Ready**: Available on Chrome/Edge/Opera/Brave (web store coming in 2025).
-- 🎨 **User-Friendly Interface**: Sleek design with intuitive navigation.
-- 📱 **Responsive Design**: Optimized for all device sizes.
-- 💾 **Advanced Storage**: Uses IndexedDB for robust local data storage.
-- ⚡ **Performance Boost**: Improved caching and faster data handling.
-- 📊 **Richer Metadata**: Comprehensive anime details.
-- 🔍 **Debug Tools**: Enhanced error tracking and logs.
-- 📚 **Dual Tracking**: Tracks both anime and manga.
-- 🔄 **Format Switching**: Switch seamlessly between anime and manga lists.
+### 🔄 Synchronisation Watchlist Crunchyroll
+- **Interception automatique** de l'API watchlist Crunchyroll
+- **Détection intelligente** du progrès réel (épisode regardé vs. à regarder)
+- **Synchronisation progressive** avec rate-limiting (2s entre requêtes)
+- **Interface moderne** avec suivi en temps réel
+- **Cache intelligent** pour éviter les requêtes répétées
 
 ## 🚀 Installation
 
-### Chrome (Manual Installation)
-1. Download the latest release from GitHub
-2. Enable “Developer mode” in your Chrome Extensions settings.
-3. Select “Load unpacked” and upload the downloaded folder.
+1. **Clonez le repo** ou téléchargez les fichiers
+2. **Ouvrez Chrome** et allez sur `chrome://extensions/`
+3. **Activez le mode développeur** (en haut à droite)
+4. **Cliquez sur "Charger l'extension non empaquetée"**
+5. **Sélectionnez** le dossier du projet
 
-> 📝 Note: ALTA will be officially available on the Chrome Web Store in 2025. For now, manual installation is required.
+## 🎮 Utilisation
 
-## 💻 Development Setup
+### Configuration Initiale
+1. Cliquez sur l'icône ALTA dans la barre d'outils
+2. Cliquez sur "Log In" pour vous connecter à AniList
+3. Autorisez l'extension
 
-1. Clone the GitHub repository.
-2. Rename config.example.js to background.js.
-3. Activate “Developer mode” in your browser’s extension settings.
-4. Set up your AniList API client:
-   - Navigate to [AniList Developer Settings](https://anilist.co/settings/developer)
-   - Create a new client and set the redirect URL: `https://[YOUR-EXTENSION-ID].chromiumapp.org/`.
-   - Copy your Client ID to `data.js`
-5.	Update `background.js` with AniList credentials.
-6.	Load the unpacked extension in your browser.
+### Synchronisation Manuelle (Épisode par Épisode)
+- Regardez un anime sur Crunchyroll
+- L'extension détectera automatiquement votre progression
+- Cliquez sur +/- dans le popup pour ajuster manuellement
 
-⚠️ **Security Tip**: Never commit personal AniList credentials to the repository. Sensitive files (`background.js` and `data.js`) are included in `.gitignore` for protection.
+### 🆕 Synchronisation Watchlist (NOUVEAU !)
 
-## 🛠️ Using ALTA
+#### Méthode 1 : Automatique
+1. **Visitez** votre watchlist Crunchyroll : https://www.crunchyroll.com/watchlist
+2. **Attendez** que la page charge complètement
+3. **Ouvrez** le popup ALTA
+4. **Cliquez** sur l'icône 🔄 (Watchlist Sync)
+5. Les données sont automatiquement capturées !
 
-1. Launch ALTA via the browser toolbar icon.
-2. Log in with your AniList credentials.
-3. Start streaming on supported platforms.
-4. ALTA will sync your progress automatically!
-5. Explore stats and notifications using the toolbar options.
+#### Méthode 2 : Manuelle
+1. **Ouvrez** le popup ALTA
+2. **Cliquez** sur l'icône 🔄
+3. **Cliquez** sur "Synchroniser Maintenant"
+4. **Observez** la barre de progression en temps réel
 
-## 🙏 Acknowledgments
+## 🐛 Dépannage
 
-- Special thanks to AniList for their API, contributors, and the passionate anime community for their support!
+### "No watchlist data available"
 
-## 📝 License
+Cette erreur signifie que l'extension n'a pas encore capturé les données de votre watchlist.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Solution rapide** :
+1. Allez sur https://www.crunchyroll.com/watchlist
+2. Attendez que la page charge complètement
+3. Actualisez la page (F5) si nécessaire
+4. Retournez au popup et réessayez
+
+**Debug complet** : Consultez [DEBUG_WATCHLIST.md](./DEBUG_WATCHLIST.md)
+
+### Vérifier que l'interception fonctionne
+
+1. Ouvrez https://www.crunchyroll.com/watchlist
+2. Ouvrez DevTools (F12) → Console
+3. Cherchez ces messages :
+   ```
+   ✅ ALTA: Fetch interceptor installed successfully
+   ✅ ALTA: Intercepted Watchlist API call: ...
+   ✅ ALTA: Captured watchlist data
+   ```
+
+Si vous ne voyez PAS ces messages, rechargez l'extension :
+1. `chrome://extensions/`
+2. Trouvez ALTA
+3. Cliquez sur ⟳ (Recharger)
+
+## 📊 Fonctionnalités
+
+- ✅ Connexion AniList OAuth
+- ✅ Détection automatique des épisodes regardés
+- ✅ Mise à jour manuelle du progrès (+/-)
+- ✅ Notifications pour nouveaux épisodes
+- ✅ Statistiques de visionnage
+- ✅ **NOUVEAU** : Sync complète de la watchlist Crunchyroll
+- ✅ **NOUVEAU** : Rate-limiting intelligent
+- ✅ **NOUVEAU** : Cache de mapping Crunchyroll ↔ AniList
+
+## 🔧 Configuration
+
+### Fichier `data.js`
+Créez un fichier `data.js` basé sur `data.js.example` :
+
+```javascript
+const clientData = {
+  clientId: "VOTRE_CLIENT_ID_ANILIST"
+};
+```
+
+Obtenez votre Client ID sur : https://anilist.co/settings/developer
+
+## 📁 Structure du Projet
+
+```
+ALTA/
+├── manifest.json                    # Configuration de l'extension
+├── background.js                    # Service worker (sync logic)
+├── popup.html/js/css               # Interface utilisateur
+├── crunchyroll-interceptor.js      # Interception API watchlist
+├── crunchyroll-content-bridge.js   # Bridge pour messages
+├── crunchyroll-content.js          # Détection épisodes
+├── data.js                         # Configuration OAuth
+└── DEBUG_WATCHLIST.md              # Guide de dépannage
+```
+
+## 🛠️ Technologies
+
+- **Manifest V3** (Chrome Extensions)
+- **AniList GraphQL API**
+- **Crunchyroll Internal API** (interception)
+- **IndexedDB** pour le cache local
+- **Chrome Storage API**
+
+## 📝 Notes Importantes
+
+### Rate Limiting
+L'extension respecte les limites de l'API AniList :
+- **2 secondes** entre chaque requête de sync
+- **Max ~30 requêtes/minute** (limite AniList : 90/min)
+
+### Cache
+Le cache de mapping Crunchyroll → AniList est stocké indéfiniment pour éviter les recherches répétées.
+
+Pour vider le cache :
+```javascript
+chrome.storage.local.remove('anilist_search_cache')
+```
+
+### Données Personnelles
+L'extension stocke uniquement :
+- Votre token AniList (localement)
+- Le mapping des animes
+- Votre watchlist Crunchyroll (localement)
+
+**Aucune donnée n'est envoyée à des serveurs tiers.**
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues !
+
+1. Fork le projet
+2. Créez une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📜 Licence
+
+Voir le fichier [LICENSE](./LICENSE)
+
+## 🙏 Crédits
+
+- **AniList** pour l'API GraphQL
+- **Crunchyroll** (interception non officielle)
+- **Font Awesome** pour les icônes
 
 ---
 
-<div align="center">
-Made with ❤️ for the anime community/fans!
-</div>
+**Auteur** : JeremGaming  
+**Version** : 1.11+  
+**Dernière mise à jour** : 2025-11-30

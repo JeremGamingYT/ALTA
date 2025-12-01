@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <link rel="stylesheet" type="text/css" href="popup.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script type="text/javascript" src="get-extension-id.js"></script>
   <script type="text/javascript" src="data.js"></script>
 </head>
+
 <body>
   <!-- Barre principale avec recherche et actions -->
   <div class="topBar">
@@ -14,7 +17,7 @@
     <button id="logout" class="secondaryBtn">
       <i class="fas fa-sign-out-alt"></i> Log Out
     </button>
-    
+
     <div class="searchWrapper">
       <i class="fas fa-search searchIcon"></i>
       <input id="search" placeholder="Search your list..." type="search">
@@ -41,7 +44,47 @@
       <i class="fa-solid fa-chart-bar"></i>
       <span class="tooltiptext">Statistics</span>
     </button>
+    <button id="watchlistSyncIcon" class="toolbarBtn">
+      <i class="fa-solid fa-sync"></i>
+      <span class="tooltiptext">Crunchyroll Watchlist Sync</span>
+    </button>
   </div>
+
+  <!-- Watchlist Sync Panel -->
+  <div id="watchlistSyncPanel" class="syncPanel" style="display: none;">
+    <div class="syncHeader">
+      <h3>🎬 Crunchyroll Watchlist Sync</h3>
+      <button id="closeSyncPanel" class="closeBtn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="syncStatus">
+      <div class="statusInfo">
+        <p><strong>Dernière mise à jour:</strong> <span id="watchlist-last-update">Jamais</span></p>
+        <p><strong>Total d'animes:</strong> <span id="watchlist-total">0</span></p>
+        <p><strong>Synchronisés:</strong> <span id="watchlist-synced">0</span></p>
+        <p><strong>En attente:</strong> <span id="watchlist-pending">0</span></p>
+        <p><strong>Erreurs:</strong> <span id="watchlist-errors">0</span></p>
+      </div>
+
+      <button id="btn-sync-watchlist" class="primaryBtn">
+        <i class="fas fa-sync-alt"></i> Synchroniser Maintenant
+      </button>
+    </div>
+
+    <div id="sync-progress" class="syncProgress" style="display: none;">
+      <div class="progressBar">
+        <div id="sync-progress-fill" class="progressFill"></div>
+      </div>
+      <p class="progressText">
+        <span id="sync-current">0</span> / <span id="sync-total">0</span> synchronisés
+      </p>
+    </div>
+
+    <div id="watchlist-items" class="watchlistItems"></div>
+  </div>
+
 
   <!-- Grille principale -->
   <div id="display" class="animeGrid"></div>
@@ -51,4 +94,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

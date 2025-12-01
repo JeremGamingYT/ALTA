@@ -3,11 +3,11 @@ console.log('Storage API available:', !!chrome.storage);
 console.log('Local storage available:', !!chrome.storage.local);
 
 // Vérifier le contenu actuel
-chrome.storage.local.get(null, function(items) {
+chrome.storage.local.get(null, function (items) {
   console.log('Current storage contents:', items);
 });
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
     console.log(
       `Storage key "${key}" in namespace "${namespace}" changed.`,
@@ -51,11 +51,11 @@ var logIn = doc.getElementById("logIn");
 var logOut = doc.getElementById("logout");
 
 // ================== EVENTS ===================
-logIn.addEventListener("click", function() {
-  chrome.identity.launchWebAuthFlow({ url: webAuthUrl, interactive: true }, async function(redirectUrl) {
+logIn.addEventListener("click", function () {
+  chrome.identity.launchWebAuthFlow({ url: webAuthUrl, interactive: true }, async function (redirectUrl) {
     let access_token = redirectUrl.match(/\#(?:access_token)\=([\S\s]*?)\&/)[1];
     token = access_token;
-    
+
     try {
       await saveToIndexedDB('userData', {
         id: 'user',
@@ -63,10 +63,10 @@ logIn.addEventListener("click", function() {
         userId: userId
       });
       console.log('Token saved to IndexedDB');
-      
+
       console.log('Saving token:', token);
-      
-      chrome.storage.local.set({ [NAMESPACES.token]: token }, function() {
+
+      chrome.storage.local.set({ [NAMESPACES.token]: token }, function () {
         if (chrome.runtime.lastError) {
           console.error('Token storage error:', chrome.runtime.lastError);
         } else {
@@ -84,7 +84,7 @@ logIn.addEventListener("click", function() {
             let options = getOptions(query);
             fetch(SERVICE_URL, options)
               .then(handleResponse)
-              .then(function(response) {
+              .then(function (response) {
                 if (!response.data || !response.data.Viewer) {
                   console.error("Impossible de récupérer l'userId : ", response);
                   return;
@@ -105,11 +105,11 @@ logIn.addEventListener("click", function() {
   });
 });
 
-logOut.addEventListener("click", function() {
-  chrome.storage.local.set({ 
-    [NAMESPACES.token]: "", 
-    [NAMESPACES.userId]: "" 
-  }, function() {
+logOut.addEventListener("click", function () {
+  chrome.storage.local.set({
+    [NAMESPACES.token]: "",
+    [NAMESPACES.userId]: ""
+  }, function () {
     console.log('Logout storage cleared');
   });
   headers["Authorization"] = "Bearer ";
@@ -118,6 +118,16 @@ logOut.addEventListener("click", function() {
   refreshList();
   logOut.style.display = "none";
   logIn.style.display = "";
+  logOut.style.display = "none";
+  logIn.style.display = "";
+});
+
+// Listen for refresh messages from background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'REFRESH_UI') {
+    console.log('Popup: Received refresh request');
+    refreshList();
+  }
 });
 
 // ================== GET OPTIONS ===================
@@ -228,24 +238,24 @@ async function fetchAllAnime(userId) {
 // ================== STATS ===================
 function computeStatsFromList(animeList) {
   if (!animeList) return;
-  
+
   let totalProgress = 0;
   animeList.forEach(item => {
     totalProgress += item.progress || 0;
   });
-  
+
   const avgEpisodeMinutes = 24;
   let totalTime = totalProgress * avgEpisodeMinutes;
-  
+
   console.log('Saving stats:', {
     totalEpisodesWatched: totalProgress,
     totalMinutesWatched: totalTime
   });
-  
+
   chrome.storage.local.set({
     totalEpisodesWatched: totalProgress,
     totalMinutesWatched: totalTime
-  }, function() {
+  }, function () {
     if (chrome.runtime.lastError) {
       console.error('Storage error:', chrome.runtime.lastError);
     } else {
@@ -313,7 +323,7 @@ async function getWatching(noCache) {
 
     // Ajout des logs de débogage
     console.log("API Response:", res);
-    
+
     // Le problème est probablement ici - la structure de la réponse est différente
     if (!res?.data?.MediaListCollection?.lists) {
       console.log("No lists found in API response");
@@ -327,7 +337,7 @@ async function getWatching(noCache) {
     }, []);
 
     console.log("All entries combined:", allEntries);
-    
+
     // Sauvegarder dans IndexedDB
     for (let entry of allEntries) {
       try {
@@ -349,7 +359,7 @@ async function getWatching(noCache) {
 
     const media = await getFromIndexedDB(type);
     console.log(`Retrieved ${media.length} entries from IndexedDB`);
-    
+
     if (media.length === 0) {
       console.log("No entries in IndexedDB, fetching from API");
       return getWatching(true);
@@ -363,10 +373,10 @@ async function getWatching(noCache) {
 }
 
 // ================== SIMPLE FETCH WITH CACHE ===================
-function fetchWithCache(cacheKey, query, variables, maxAgeSeconds=3600) {
+function fetchWithCache(cacheKey, query, variables, maxAgeSeconds = 3600) {
   return new Promise((resolve, reject) => {
     let now = Date.now();
-    chrome.storage.local.get([cacheKey], function(result) {
+    chrome.storage.local.get([cacheKey], function (result) {
       if (result[cacheKey]) {
         let { data, timestamp } = result[cacheKey];
         let age = (now - timestamp) / 1000;
@@ -392,7 +402,7 @@ function fetchWithCache(cacheKey, query, variables, maxAgeSeconds=3600) {
 
 // ================== HANDLE/UPDATE ===================
 function handleResponse(response) {
-  return response.json().then(function(json) {
+  return response.json().then(function (json) {
     return response.ok ? json : Promise.reject(json);
   });
 }
@@ -408,7 +418,7 @@ function updateImages() {
 
   if (!Array.isArray(displayedList) || displayedList.length === 0) {
     let noItems = doc.createElement("H5");
-    let textString = token 
+    let textString = token
       ? "Doesn't look like there's anything here..."
       : "Doesn't look like you're logged in yet";
     noItems.appendChild(doc.createTextNode(textString));
@@ -430,9 +440,8 @@ function updateImages() {
       <a href="${aniListUrl}" target="_blank" style="text-decoration:none;">
         <img
           id="mediaList-${mediaList.id}"
-          height="${thumbHeight}px"
-          width="${thumbWidth}px"
           src="${mediaList.media.coverImage.medium}"
+          alt="${mediaList.media.title.english || 'Anime Cover'}"
         />
         <div class="title-overlay">
           <span>${mediaList.media.title.english || mediaList.media.title.native || 'Untitled'}</span>
@@ -459,7 +468,7 @@ function updateImages() {
     cellDiv.innerHTML = imgHtmlString + span;
 
     // ===> ICI : CLIC DROIT pour ouvrir le menu contextuel
-    cellDiv.addEventListener("contextmenu", function(e) {
+    cellDiv.addEventListener("contextmenu", function (e) {
       e.preventDefault();
       // Montre un menu permettant de choisir le statut
       showStatusMenu(e.clientX, e.clientY, mediaList);
@@ -472,7 +481,7 @@ function updateImages() {
     // On supprime un éventuel menu déjà affiché
     const oldMenu = doc.getElementById("statusMenu");
     if (oldMenu) oldMenu.remove();
-  
+
     const menu = document.createElement("div");
     menu.id = "statusMenu";
     menu.style.position = "fixed";
@@ -484,7 +493,7 @@ function updateImages() {
     menu.style.padding = "8px";
     menu.style.zIndex = 999999;
     menu.style.minWidth = "150px";
-  
+
     // Statuts avec leurs icônes correspondantes
     const statusConfig = {
       "CURRENT": { icon: "fa-solid fa-play", color: "#7aa2f7" },
@@ -493,7 +502,7 @@ function updateImages() {
       "DROPPED": { icon: "fa-solid fa-xmark", color: "#f7768e" },
       "PLANNING": { icon: "fa-solid fa-clock", color: "#bb9af7" }
     };
-  
+
     Object.entries(statusConfig).forEach(([st, config]) => {
       let btn = document.createElement("button");
       btn.style.display = "flex";
@@ -502,33 +511,33 @@ function updateImages() {
       btn.style.width = "100%";
       btn.style.margin = "4px 0";
       btn.style.padding = "8px 12px";
-      
+
       // Ajout de l'icône
       let icon = document.createElement("i");
       icon.className = config.icon;
       icon.style.color = config.color;
       icon.style.width = "16px";
-      
+
       let text = document.createElement("span");
       text.textContent = st;
-      
+
       btn.appendChild(icon);
       btn.appendChild(text);
-      
+
       if (st === mediaList.status) {
         btn.disabled = true;
         btn.style.opacity = "0.5";
         btn.style.cursor = "not-allowed";
         btn.title = "Current status";
       } else {
-        btn.addEventListener("click", function() {
+        btn.addEventListener("click", function () {
           updateAnimeStatus(mediaList.id, st);
           menu.remove();
         });
       }
       menu.appendChild(btn);
     });
-  
+
     // Pour fermer le menu en cliquant hors de celui-ci
     setTimeout(() => {
       document.addEventListener("click", function handleClickOutside(e) {
@@ -538,17 +547,17 @@ function updateImages() {
         }
       });
     }, 0);
-  
+
     document.body.appendChild(menu);
-  }  
+  }
 
   // On ajoute les listeners +/- existants
   for (let i = displayedList.length - 1; i >= 0; i--) {
     let mediaList = displayedList[i];
     doc.getElementById(`dec-${mediaList.id}`)
-       .addEventListener("click", mediaClick(mediaList, -1));
+      .addEventListener("click", mediaClick(mediaList, -1));
     doc.getElementById(`inc-${mediaList.id}`)
-       .addEventListener("click", mediaClick(mediaList, 1));
+      .addEventListener("click", mediaClick(mediaList, 1));
   }
 }
 
@@ -564,7 +573,7 @@ async function saveAnimeToIndexedDB(animeData) {
     }
 
     const store = db.transaction('animeList', 'readwrite').objectStore('animeList');
-    
+
     const enrichedData = {
       id: animeData.id,
       mediaId: animeData.mediaId,
@@ -638,8 +647,8 @@ async function updateAnimeFromAPI(mediaId) {
       }
     }
   `;
-  
-  const variables = { 
+
+  const variables = {
     userId: parseInt(userId),
     mediaId: parseInt(mediaId)
   };
@@ -647,7 +656,7 @@ async function updateAnimeFromAPI(mediaId) {
   try {
     const res = await fetch(SERVICE_URL, getOptions(query, variables));
     const json = await res.json();
-    
+
     if (json.errors) {
       console.error("API Errors:", json.errors);
       return null;
@@ -669,7 +678,7 @@ async function updateAnimeFromAPI(mediaId) {
 
 // Mise à jour de mediaClick pour utiliser IndexedDB
 function mediaClick(mediaList, i) {
-  return function(e) {
+  return function (e) {
     clearTimeout(clickTimers[mediaList.id]);
 
     const newProgress = mediaList.progress + i;
@@ -691,7 +700,7 @@ function mediaClick(mediaList, i) {
       try {
         const res = await fetch(SERVICE_URL, getOptions(query, variables));
         const json = await res.json();
-        
+
         if (json.errors) {
           console.error("API Errors:", json.errors);
           return;
@@ -731,7 +740,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
       }
     }
   `;
-  
+
   const variables = {
     id: listEntryId,
     status: newStatus
@@ -740,7 +749,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
   try {
     const res = await fetch(SERVICE_URL, getOptions(query, variables));
     const json = await res.json();
-    
+
     if (json.errors) {
       console.error("API Errors:", json.errors);
       return;
@@ -748,7 +757,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
 
     const savedEntry = json.data.SaveMediaListEntry;
     console.log('Status updated to:', newStatus, 'for anime:', savedEntry.media.title.english); // Debug log
-    
+
     if (newStatus === 'CURRENT' || newStatus === 'PAUSED') {
       // Mettre à jour l'anime complet dans IndexedDB
       await updateAnimeFromAPI(savedEntry.mediaId);
@@ -770,7 +779,7 @@ async function updateAnimeStatus(listEntryId, newStatus) {
 // ================== STATS (SAME) ===================
 function updateStats(increment) {
   const avgEpisodeMinutes = 24;
-  chrome.storage.local.get(["totalEpisodesWatched", "totalMinutesWatched"], function(res) {
+  chrome.storage.local.get(["totalEpisodesWatched", "totalMinutesWatched"], function (res) {
     let epCount = res.totalEpisodesWatched || 0;
     let minCount = res.totalMinutesWatched || 0;
     epCount += increment;
@@ -785,7 +794,7 @@ function updateStats(increment) {
 // ================== SHOW PANEL ===================
 function showStats() {
   showPanel("<h2>Global Stats</h2><div id='globalStats'></div><button id='closePanel'>Close</button>");
-  
+
   getGlobalStats().then(animeStats => {
     if (!animeStats) {
       doc.getElementById("globalStats").innerHTML = `<p>Impossible to get global stats</p>`;
@@ -802,7 +811,7 @@ function showStats() {
 
 // ================== SHOW NOTIFICATIONS ===================
 function showNotifications() {
-  chrome.storage.local.get(["notificationsHistory"], function(result) {
+  chrome.storage.local.get(["notificationsHistory"], function (result) {
     let history = result.notificationsHistory || [];
     if (history.length === 0) {
       let html = `
@@ -838,8 +847,8 @@ function showNotifications() {
     showPanel(html);
 
     let clearBtn = doc.getElementById("clearNotifications");
-    clearBtn.addEventListener("click", function() {
-      chrome.storage.local.set({ notificationsHistory: [] }, function() {
+    clearBtn.addEventListener("click", function () {
+      chrome.storage.local.set({ notificationsHistory: [] }, function () {
         showPanel(`
           <h2>Recent notifications</h2>
           <p>No notifications found.</p>
@@ -877,10 +886,10 @@ function showPanel(innerHtml) {
 async function toggleList() {
   displayedType = (displayedType === "ANIME") ? "MANGA" : "ANIME";
   doc.getElementById("listType").innerHTML = displayedType;
-  
-  chrome.storage.local.set({ 
-    [NAMESPACES.type]: displayedType 
-  }, function() {
+
+  chrome.storage.local.set({
+    [NAMESPACES.type]: displayedType
+  }, function () {
     if (chrome.runtime.lastError) {
       console.error('Error saving displayedType:', chrome.runtime.lastError);
     } else {
@@ -898,7 +907,7 @@ function searchList(e) {
   e.preventDefault();
   let query = searchInput.value.trim().toUpperCase();
   if (query) {
-    displayedList = fullList.filter(function(item) {
+    displayedList = fullList.filter(function (item) {
       let english = item.media.title.english || "";
       return (
         english.toUpperCase().includes(query)
@@ -927,174 +936,123 @@ if (statsIcon) {
 }
 
 // ================== ON LOAD (INIT) ===================
-chrome.storage.local.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async function(result) {
-  console.log('Initial storage load:', result);
-  
-  displayedType = result.type || "ANIME";
-  doc.getElementById("listType").innerHTML = displayedType;
+// ================== ON LOAD (INIT) ===================
+window.addEventListener('load', async function () {
+  try {
+    // 1. Initialize IndexedDB first
+    await initDB();
+    console.log('IndexedDB ready');
 
-  token = result.token;
-  headers["Authorization"] = "Bearer " + token;
-  userId = result.userId;
-
-  if (token && userId) {
-    logIn.style.display = "none";
-  } else {
-    logOut.style.display = "none";
-  }
-
-  fullList = await getWatching(true);
-  displayedList = fullList;
-  computeStatsFromList(fullList);
-  updateImages();
-});
-
-// Correction 1: Initialisation explicite du storage lors du chargement
-window.addEventListener('load', function() {
-  chrome.storage.local.get(null, function(items) {
-    console.log('Current storage state:', items);
-  });
-});
-
-// Fonction utilitaire pour débugger le storage
-function debugStorage() {
-  chrome.storage.local.get(null, function(items) {
-    console.log('Current storage contents:', items);
-  });
-}
-
-// Appelez cette fonction à des moments stratégiques, par exemple :
-// - Après le login
-// - Après la mise à jour des stats
-// - Au chargement de la page
-
-// Au début du fichier, après les console.log existants
-chrome.storage.local.getBytesInUse(null, function(bytesInUse) {
-  console.log('Storage bytes in use:', bytesInUse);
-});
-
-// Fonction pour réinitialiser le storage en cas de problème
-function resetStorage() {
-  chrome.storage.local.clear(function() {
-    if (chrome.runtime.lastError) {
-      console.error('Clear storage error:', chrome.runtime.lastError);
-    } else {
-      console.log('Storage cleared successfully');
-      // Réinitialiser avec des valeurs par défaut
-      chrome.storage.local.set({
-        notificationsHistory: [],
-        totalEpisodesWatched: 0,
-        totalMinutesWatched: 0
-      }, function() {
-        console.log('Storage reinitialized');
-        debugStorage(); // Afficher le nouveau contenu
-      });
+    // 2. Check for clientData
+    if (typeof clientData === 'undefined') {
+      console.error('clientData is missing. Please configure data.js');
+      document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h2>Configuration Error</h2><p>Please configure <code>data.js</code> with your AniList API credentials.</p></div>';
+      return;
     }
-  });
-}
 
-// Au début du fichier, après les imports
+    // 3. Initialize global variables from clientData
+    // Ensure these are set before use
+    if (typeof client_id === 'undefined') {
+      window.client_id = clientData.clientId;
+      window.webAuthUrl = "https://anilist.co/api/v2/oauth/authorize?client_id=" + client_id + "&response_type=token";
+    }
+
+    // 4. Load settings from storage
+    chrome.storage.local.get([NAMESPACES.token, NAMESPACES.userId, NAMESPACES.type], async function (result) {
+      console.log('Initial storage load:', result);
+
+      displayedType = result.type || "ANIME";
+      const listTypeEl = doc.getElementById("listType");
+      if (listTypeEl) listTypeEl.innerHTML = displayedType;
+
+      token = result.token;
+      if (token) {
+        headers["Authorization"] = "Bearer " + token;
+      }
+      userId = result.userId;
+
+      // Update UI based on auth state
+      if (token && userId) {
+        if (logIn) logIn.style.display = "none";
+        if (logOut) logOut.style.display = "flex"; // Changed to flex for alignment
+      } else {
+        if (logOut) logOut.style.display = "none";
+        if (logIn) logIn.style.display = "flex";
+      }
+
+      // 5. Fetch and display data
+      try {
+        fullList = await getWatching(true);
+        displayedList = fullList;
+        computeStatsFromList(fullList);
+        updateImages();
+      } catch (err) {
+        console.error("Error fetching initial data:", err);
+      }
+    });
+
+  } catch (err) {
+    console.error('Failed to initialize:', err);
+  }
+});
+
+// Remove the old standalone chrome.storage.local.get call that was causing race conditions
+// (The one that was around line 930)
+
+// ... (rest of the file functions: initDB, saveToIndexedDB, etc.)
+
+// ================== INDEXEDDB FUNCTIONS ===================
+
 const DB_NAME = 'alta-storage';
 const DB_VERSION = 5;
 let db;
 
-// Fonction pour initialiser IndexedDB
 function initDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION + 1);
-    
+
     request.onerror = (event) => {
       console.error("IndexedDB error:", event.target.error);
       reject(event.target.error);
     };
-    
+
     request.onsuccess = (event) => {
       db = event.target.result;
       console.log("IndexedDB initialized successfully");
       resolve(db);
     };
-    
+
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      
-      // Store manga détaillé avec index des titres
+
       if (!db.objectStoreNames.contains('mangaList')) {
         const mangaStore = db.createObjectStore('mangaList', { keyPath: 'id' });
-        
-        // Indices pour les recherches rapides
         mangaStore.createIndex('mediaId', 'mediaId', { unique: false });
         mangaStore.createIndex('title', ['title.english'], { unique: false });
         mangaStore.createIndex('status', 'status', { unique: false });
         mangaStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
       }
-      
-      // Store utilisateur
+
       if (!db.objectStoreNames.contains('userData')) {
         const userStore = db.createObjectStore('userData', { keyPath: 'id' });
         userStore.createIndex('lastLogin', 'lastLogin', { unique: false });
       }
 
-      // Store anime détaillé
       if (!db.objectStoreNames.contains('animeList')) {
         const animeStore = db.createObjectStore('animeList', { keyPath: 'id' });
-        
-        // Indices pour les recherches rapides
         animeStore.createIndex('mediaId', 'mediaId', { unique: false });
         animeStore.createIndex('title', ['title.english'], { unique: false });
         animeStore.createIndex('status', 'status', { unique: false });
         animeStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
-        
-        // Structure des données:
-        /*
-        {
-          id: number,
-          mediaId: number,
-          progress: number,
-          totalEpisodes: number,
-          title: {
-            english: string,
-            native: string
-          },
-          coverImage: {
-            medium: string,
-            large: string,
-            extraLarge: string
-          },
-          bannerImage: string,
-          status: string,
-          format: string,
-          season: string,
-          seasonYear: number,
-          genres: string[],
-          averageScore: number,
-          popularity: number,
-          nextAiringEpisode: {
-            airingAt: number,
-            timeUntilAiring: number,
-            episode: number
-          },
-          lastUpdated: number,
-          userStatus: string, // CURRENT, PLANNING, COMPLETED, etc.
-          userScore: number,
-          userStartDate: string,
-          userCompletedDate: string,
-          notes: string
-        }
-        */
       }
 
-      // Store pour les notifications
       if (!db.objectStoreNames.contains('notifications')) {
-        const notifStore = db.createObjectStore('notifications', { 
-          keyPath: 'id', 
-          autoIncrement: true 
-        });
+        const notifStore = db.createObjectStore('notifications', { keyPath: 'id', autoIncrement: true });
         notifStore.createIndex('animeId', 'animeId', { unique: false });
         notifStore.createIndex('date', 'date', { unique: false });
         notifStore.createIndex('type', 'type', { unique: false });
       }
 
-      // Store pour les statistiques
       if (!db.objectStoreNames.contains('stats')) {
         const statsStore = db.createObjectStore('stats', { keyPath: 'id' });
         statsStore.createIndex('date', 'date', { unique: false });
@@ -1103,66 +1061,22 @@ function initDB() {
   });
 }
 
-// Fonction pour sauvegarder dans IndexedDB
 function saveToIndexedDB(storeName, data) {
   return new Promise((resolve, reject) => {
     if (!db) {
       reject(new Error('Database not initialized'));
       return;
     }
-    
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     const request = store.put(data);
-    
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-// Initialiser la DB au chargement
-window.addEventListener('load', async function() {
-  try {
-    await initDB();
-    console.log('IndexedDB ready to use');
-    
-    // Migrer les données existantes de chrome.storage.local vers IndexedDB
-    chrome.storage.local.get(null, async function(items) {
-      if (Object.keys(items).length > 0) {
-        try {
-          await saveToIndexedDB('userData', {
-            id: 'user',
-            token: items.token,
-            userId: items.userId,
-            type: items.type
-          });
-          
-          await saveToIndexedDB('stats', {
-            id: 'stats',
-            totalEpisodesWatched: items.totalEpisodesWatched || 0,
-            totalMinutesWatched: items.totalMinutesWatched || 0
-          });
-          
-          if (items.notificationsHistory) {
-            for (let notif of items.notificationsHistory) {
-              await saveToIndexedDB('notifications', notif);
-            }
-          }
-          
-          console.log('Data migrated to IndexedDB successfully');
-        } catch (err) {
-          console.error('Error migrating data:', err);
-        }
-      }
-    });
-  } catch (err) {
-    console.error('Failed to initialize IndexedDB:', err);
-  }
-});
-
-// Modifier la fonction storeNotification pour inclure plus d'informations
 function storeNotification(animeTitle, episodeNumber, animeId, coverImage) {
-  chrome.storage.local.get(["notificationsHistory"], async function(result) {
+  chrome.storage.local.get(["notificationsHistory"], async function (result) {
     let history = result.notificationsHistory || [];
     const notif = {
       animeTitle: animeTitle,
@@ -1171,51 +1085,42 @@ function storeNotification(animeTitle, episodeNumber, animeId, coverImage) {
       coverImage: coverImage,
       date: Date.now()
     };
-    
     history.push(notif);
-    
-    // Sauvegarder dans chrome.storage.local et IndexedDB
     try {
-      await saveToIndexedDB('notifications', notif);
+      if (db) await saveToIndexedDB('notifications', notif);
       chrome.storage.local.set({ notificationsHistory: history });
-      console.log("Notification saved to both storages");
     } catch (err) {
       console.error('Error saving notification:', err);
     }
   });
 }
 
-// Fonction pour récupérer depuis IndexedDB avec filtrage
 async function getFromIndexedDB(type) {
+  if (!db) return [];
   const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
   const transaction = db.transaction(storeName, 'readonly');
   const store = transaction.objectStore(storeName);
-  
+
   const media = await new Promise((resolve, reject) => {
     const request = store.getAll();
     request.onsuccess = () => {
-      // Filtrer explicitement pour CURRENT et PAUSED
-      const filtered = request.result.filter(item => 
+      const filtered = request.result.filter(item =>
         item.status === 'CURRENT' || item.status === 'PAUSED'
       );
       resolve(filtered);
     };
     request.onerror = () => reject(request.error);
   });
-  
-  // Si aucun résultat, recharger depuis l'API
+
   if (media.length === 0) {
-    console.log('No CURRENT or PAUSED items found in IndexedDB');
     return getWatching(true);
   }
-  
   return media;
 }
 
-// Modifier saveMediaToIndexedDB pour gérer correctement le statut
 async function saveMediaToIndexedDB(mediaData, type) {
+  if (!db) return null;
   try {
-    // Si le statut n'est pas CURRENT ou PAUSED, supprimer de IndexedDB
     if (mediaData.status !== 'CURRENT' && mediaData.status !== 'PAUSED') {
       const store = db.transaction(type === 'MANGA' ? 'mangaList' : 'animeList', 'readwrite')
         .objectStore(type === 'MANGA' ? 'mangaList' : 'animeList');
@@ -1223,10 +1128,9 @@ async function saveMediaToIndexedDB(mediaData, type) {
       return null;
     }
 
-    // Sinon, sauvegarder normalement
     const storeName = type === 'MANGA' ? 'mangaList' : 'animeList';
     const store = db.transaction(storeName, 'readwrite').objectStore(storeName);
-    
+
     const enrichedData = {
       id: mediaData.id,
       mediaId: mediaData.mediaId,
@@ -1238,10 +1142,203 @@ async function saveMediaToIndexedDB(mediaData, type) {
     };
 
     await store.put(enrichedData);
-    console.log(`Saved to IndexedDB:`, enrichedData);
     return enrichedData;
   } catch (err) {
     console.error(`Error saving to IndexedDB:`, err);
     throw err;
   }
 }
+
+// ========================================
+// WATCHLIST SYNC UI
+// ========================================
+
+const watchlistSyncIcon = document.getElementById('watchlistSyncIcon');
+const watchlistSyncPanel = document.getElementById('watchlistSyncPanel');
+const closeSyncPanel = document.getElementById('closeSyncPanel');
+const btnSyncWatchlist = document.getElementById('btn-sync-watchlist');
+const syncProgress = document.getElementById('sync-progress');
+const watchlistItems = document.getElementById('watchlist-items');
+
+// Toggle panel
+watchlistSyncIcon?.addEventListener('click', () => {
+  const isVisible = watchlistSyncPanel.style.display === 'block';
+  watchlistSyncPanel.style.display = isVisible ? 'none' : 'block';
+
+  if (!isVisible) {
+    loadWatchlistStatus();
+    loadWatchlistItems();
+  }
+});
+
+closeSyncPanel?.addEventListener('click', () => {
+  watchlistSyncPanel.style.display = 'none';
+});
+
+// Manual sync trigger
+btnSyncWatchlist?.addEventListener('click', async () => {
+  try {
+    btnSyncWatchlist.classList.add('syncing');
+    btnSyncWatchlist.disabled = true;
+    btnSyncWatchlist.innerHTML = '<i class="fas fa-sync-alt"></i> Récupération des données Crunchyroll...';
+
+    // First, fetch watchlist from Crunchyroll API
+    const fetchResponse = await chrome.runtime.sendMessage({
+      action: 'FETCH_CRUNCHYROLL_WATCHLIST'
+    });
+
+    if (!fetchResponse.success) {
+      alert('Erreur lors de la récupération des données Crunchyroll: ' + fetchResponse.error);
+      resetSyncButton();
+      return;
+    }
+
+    console.log('Watchlist fetched from Crunchyroll:', fetchResponse.data);
+    btnSyncWatchlist.innerHTML = '<i class="fas fa-sync-alt"></i> Synchronisation avec AniList...';
+
+    // Then start AniList sync
+    const response = await chrome.runtime.sendMessage({
+      action: 'START_WATCHLIST_SYNC'
+    });
+
+    if (response.success) {
+      console.log('Sync started:', response.data);
+      syncProgress.style.display = 'block';
+    } else {
+      alert('Erreur: ' + response.error);
+      resetSyncButton();
+    }
+  } catch (error) {
+    console.error('Error starting sync:', error);
+    alert('Erreur lors du démarrage de la synchronisation');
+    resetSyncButton();
+  }
+});
+
+function resetSyncButton() {
+  btnSyncWatchlist.classList.remove('syncing');
+  btnSyncWatchlist.disabled = false;
+  btnSyncWatchlist.innerHTML = '<i class="fas fa-sync-alt"></i> Synchroniser Maintenant';
+}
+
+// Load status
+async function loadWatchlistStatus() {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'GET_SYNC_STATUS'
+    });
+
+    if (response.success) {
+      const status = response.data;
+
+      // Update UI
+      document.getElementById('watchlist-total').textContent = (status.synced || 0) + (status.pending || 0);
+      document.getElementById('watchlist-synced').textContent = status.synced || 0;
+      document.getElementById('watchlist-pending').textContent = status.pending || 0;
+      document.getElementById('watchlist-errors').textContent = status.errors || 0;
+
+      if (status.lastUpdated) {
+        const date = new Date(status.lastUpdated);
+        document.getElementById('watchlist-last-update').textContent = date.toLocaleString('fr-FR');
+      }
+
+      // Update progress if syncing
+      if (status.status === 'syncing') {
+        syncProgress.style.display = 'block';
+        updateProgress(status.current, status.total);
+        btnSyncWatchlist.classList.add('syncing');
+        btnSyncWatchlist.disabled = true;
+      } else if (status.status === 'completed') {
+        syncProgress.style.display = 'none';
+        resetSyncButton();
+      }
+    }
+  } catch (error) {
+    console.error('Error loading status:', error);
+  }
+}
+
+// Load items
+async function loadWatchlistItems() {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      action: 'GET_WATCHLIST_ITEMS'
+    });
+
+    if (response.success) {
+      const data = response.data;
+      displayWatchlistItems(data.items || []);
+    }
+  } catch (error) {
+    console.error('Error loading items:', error);
+  }
+}
+
+// Display items
+function displayWatchlistItems(items) {
+  watchlistItems.innerHTML = '';
+
+  if (items.length === 0) {
+    watchlistItems.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:20px;">Aucun anime dans la watchlist.<br>Visitez votre watchlist Crunchyroll pour charger les données.</p>';
+    return;
+  }
+
+  items.forEach(item => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'watchlistItem';
+
+    const statusClass = item.sync_status || 'pending';
+    const statusText = {
+      'pending': 'En attente',
+      'syncing': 'Sync en cours',
+      'synced': 'Synchronisé',
+      'error': 'Erreur'
+    }[statusClass] || statusClass;
+
+    itemDiv.innerHTML = `
+      ${item.thumbnail ? `<img src="${item.thumbnail}" alt="${item.series_title}">` : ''}
+      <div class="watchlistItemInfo">
+        <div class="watchlistItemTitle" title="${item.series_title}">${item.series_title}</div>
+        <div class="watchlistItemProgress">
+          ${item.season_title} • Épisode ${item.last_episode_watched} regardé
+        </div>
+        <span class="watchlistItemStatus ${statusClass}">${statusText}</span>
+      </div>
+    `;
+
+    watchlistItems.appendChild(itemDiv);
+  });
+}
+
+// Update progress bar
+function updateProgress(current, total) {
+  const percentage = (current / total) * 100;
+  document.getElementById('sync-progress-fill').style.width = percentage + '%';
+  document.getElementById('sync-current').textContent = current;
+  document.getElementById('sync-total').textContent = total;
+}
+
+// Listen for sync progress updates from background
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'SYNC_PROGRESS_UPDATE') {
+    const { status, current, total } = request.data;
+
+    if (status === 'syncing') {
+      syncProgress.style.display = 'block';
+      updateProgress(current, total);
+    } else if (status === 'completed') {
+      syncProgress.style.display = 'none';
+      resetSyncButton();
+      loadWatchlistStatus();
+      loadWatchlistItems();
+    }
+  }
+
+  // Existing REFRESH_UI handler
+  if (request.action === 'REFRESH_UI') {
+    console.log('Popup: Received refresh request');
+    refreshList();
+  }
+});
+
+console.log('ALTA Popup initialized with Watchlist Sync');
